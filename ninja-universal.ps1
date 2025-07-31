@@ -50,6 +50,23 @@ param (
     [string]$ClientSecret
 )
 
+# --- Compatibility shim for Windows PowerShell 5.1 ----------------------------
+# Automatic boolean variables like $IsWindows / $IsLinux were introduced in
+# PowerShell 6+.  They are therefore missing when this script is executed under
+# legacy Windows PowerShell 5.x.  A handful of runtime checks below rely on
+# these variables, so we create reasonable fall-backs when they are absent.
+
+if (-not (Get-Variable -Name IsWindows -Scope Script -ErrorAction SilentlyContinue)) {
+    # pre-PowerShell 6 implies Windows only
+    $Script:IsWindows = $true
+}
+if (-not (Get-Variable -Name IsLinux -Scope Script -ErrorAction SilentlyContinue)) {
+    $Script:IsLinux   = $false
+}
+if (-not (Get-Variable -Name IsMacOS -Scope Script -ErrorAction SilentlyContinue)) {
+    $Script:IsMacOS   = $false
+}
+
 # ── helper: ensure PSGallery module ────────────────────────────────────
 function Ensure-Module {
     param([string]$Name)

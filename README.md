@@ -185,7 +185,7 @@ Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_
     -Instance US -UseClientAuth -Scopes @('management','monitoring')
 Get-NinjaOneOrganizations
 
-# Now list and pick an organisation and location interactively:
+### Manual pick: organisation & location
 $orgs = Get-NinjaOneOrganizations | Sort-Object Name
 for ($i=0; $i -lt $orgs.Count; $i++) { "{0}) {1}" -f $i, $orgs[$i].Name }
 $idx = Read-Host "Select organisation (0-$($orgs.Count-1))"

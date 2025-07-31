@@ -150,7 +150,7 @@ if (-not $CID -or -not $CSC) {
 
 # ── choose Org & Location ─────────────────────────────────────────────
 $org = Pick-Item "Select organisation" (Get-NinjaOneOrganization | Sort-Object name)
-$loc = Pick-Item "Select location"     (Get-NinjaOneLocation -OrganizationId $org.id | Sort-Object name)
+$loc = Pick-Item "Select location"     (Get-NinjaOneLocations -OrganizationId $org.id | Sort-Object name)
 
 # ── pick auto installer type if omitted ───────────────────────────────
 if (-not $InstallerType) {

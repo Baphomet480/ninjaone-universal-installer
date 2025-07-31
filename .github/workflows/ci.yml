@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v3
+      - name: Install PSScriptAnalyzer
+        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force"
+      - name: Run PSScriptAnalyzer
+        run: pwsh -c "Invoke-ScriptAnalyzer -Path . -Recurse"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v3
+      - name: Install Pester
+        run: pwsh -c "Install-Module -Name Pester -Scope CurrentUser -Force"
+      - name: Run Pester tests
+        run: pwsh -c "Invoke-Pester -Path tests"

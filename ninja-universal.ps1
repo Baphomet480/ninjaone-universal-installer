@@ -149,8 +149,8 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
         $splat.Region = $Region
     }
     elseif ($connCmd.Parameters.ContainsKey('Instance')) {
-        # older module versions use -Instance in place of Region
-        $splat.Instance = $Region
+        # older module versions use -Instance in place of Region (lowercase)
+        $splat.Instance = $Region.ToLower()
     }
     elseif ($connCmd.Parameters.ContainsKey('EnvironmentURI')) {
         # very old modules expect a full URI instead of region code

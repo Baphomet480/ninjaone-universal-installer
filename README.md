@@ -116,10 +116,28 @@ If you really need a single line in a Windows PowerShell prompt (no intermediate
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -Command "
     $t = [IO.Path]::Combine([IO.Path]::GetTempPath(), 'ninja-universal.ps1');
-    Invoke-WebRequest 'https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1' 
+    Invoke-WebRequest 'https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1' \
         -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile $t;
     & $t -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
 "
+```
+
+### Sample: Persisted env vars + download + run (Windows PowerShell)
+
+Below is an example PowerShell session that sets environment variables for your NinjaOne API credentials, downloads the script, and runs the installer using those vars:
+```powershell
+# Persist credentials for current session (or use SetX for permanent)
+$Env:NINJA_CLIENT_ID     = 'YOUR_ID'
+$Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
+
+# Download latest script
+Remove-Item ninja-universal.ps1 -ErrorAction SilentlyContinue
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
+    -UseBasicParsing -OutFile ninja-universal.ps1
+
+# Run installer (uses env vars)
+.\
+ninja-universal.ps1 -Install
 ```
 
 ## Parameters

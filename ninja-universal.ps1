@@ -132,7 +132,7 @@ if (-not $CID -or -not $CSC) {
 if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
 
 {
-    # Connect to NinjaOne API; include -Region only if supported by the module version
+    # Connect to NinjaOne API; prefer -Instance, then -Region, else -EnvironmentURI based on module version
     $connCmd = Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue
     if (-not $connCmd) {
         throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
@@ -144,13 +144,13 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
         UseClientAuth= $true
         Scopes       = @('management','monitoring')
     }
-    if ($connCmd.Parameters.ContainsKey('Region')) {
+    if ($connCmd.Parameters.ContainsKey('Instance')) {
+        # prefer -Instance in older and current modules (lowercase)
+        $splat.Instance = $Region.ToLower()
+    }
+    elseif ($connCmd.Parameters.ContainsKey('Region')) {
         # newer module versions accept -Region
         $splat.Region = $Region
-    }
-    elseif ($connCmd.Parameters.ContainsKey('Instance')) {
-        # older module versions use -Instance in place of Region (lowercase)
-        $splat.Instance = $Region.ToLower()
     }
     elseif ($connCmd.Parameters.ContainsKey('EnvironmentURI')) {
         # very old modules expect a full URI instead of region code

@@ -172,7 +172,8 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
   ```
 -- If GUI libraries fail on Linux, retry with `-NoGui` to skip GUI dependencies.
-- If you see "No organisations found.", verify your API credentials and region/instance:
+- If you see "No organisations found.", first check your console scrollback for the printed org list (it appears above the prompt). \
+  If truly empty, verify your API credentials and region/instance:
 ```powershell
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters

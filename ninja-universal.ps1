@@ -62,6 +62,9 @@ Trap {
     Exit 1
 }
 
+# Legacy compatibility: ensure $sudo wrapper variable exists so old &$sudo calls work
+$sudo = ''
+
 # --- Compatibility shim for Windows PowerShell 5.1 ----------------------------
 # Automatic boolean variables like $IsWindows / $IsLinux were introduced in
 # PowerShell 6+.  They are therefore missing when this script is executed under

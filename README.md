@@ -178,7 +178,8 @@ ninja-universal.ps1 -Region NA -Install
   # Try manual connect and list orgs
   $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
   $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-  Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET -Instance US
+  Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET `
+    -Instance US -UseClientAuth -Scopes management
   Get-NinjaOneOrganizations
   ```
 

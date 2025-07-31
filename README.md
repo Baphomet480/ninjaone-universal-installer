@@ -178,12 +178,19 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
 
-# Simple manual connect using client credentials
+# Simple manual connect using client credentials splat
 $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
 $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
 
-Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Instance US -Scopes management,monitoring -UseClientAuth
+$connectSplat = @{ 
+    ClientId      = $Env:NINJA_CLIENT_ID
+    ClientSecret  = $Env:NINJA_CLIENT_SECRET
+    UseClientAuth = $true           # client-credentials grant
+    Scopes        = 'management'    # ONLY the scope you ticked
+    Instance      = 'us'           # us, us2, ca, eu, oc
+}
+
+Connect-NinjaOne @connectSplat
 
 Get-NinjaOneOrganizations
 

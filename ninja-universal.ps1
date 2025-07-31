@@ -132,11 +132,18 @@ if (-not $CID -or -not $CSC) {
 if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
 
 {
-    # Connect to NinjaOne API using client credentials (instance must match module expectations)
+    # Connect to NinjaOne API using client credentials (client-only flow)
     if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
         throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
     }
-    Connect-NinjaOne -ClientId $CID -ClientSecret $CSC -Instance $Region -Scopes management,monitoring -UseClientAuth
+    $connectSplat = @{ 
+        ClientId      = $CID
+        ClientSecret  = $CSC
+        UseClientAuth = $true           # client-credentials grant
+        Scopes        = 'management'    # ONLY the scope you ticked
+        Instance      = $Region.ToLower()  # us, us2, ca, eu, oc
+    }
+    Connect-NinjaOne @connectSplat
 }
 
 # ── choose Org & Location ─────────────────────────────────────────────

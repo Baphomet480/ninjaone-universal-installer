@@ -164,7 +164,7 @@ else {
 }
 
 # ── Generate installer URL & download ─────────────────────────────────
-$link = Get-NinjaOneInstaller -OrganizationId $org.id -LocationId $loc.id -InstallerType $InstallerType
+$link = Get-NinjaOneInstaller -organisationId $org.id -locationId $loc.id -installerType $InstallerType
 $ext  = ($InstallerType -split '_')[-1].ToLower()
 $Out  = Join-Path ([IO.Path]::GetTempPath()) "ninja.$ext"
 

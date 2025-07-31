@@ -136,7 +136,17 @@ iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/m
     -UseBasicParsing -OutFile ninja-universal.ps1
 
 # Run installer (uses env vars)
-.\
+.
+ninja-universal.ps1 -Install
+```
+
+### One‑liner with env vars and no-cache (Windows PowerShell)
+
+To set your API creds, bypass cache, and run in one pipe, use:
+```powershell
+$Env:NINJA_CLIENT_ID     = 'YOUR_ID'; $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET';
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
+    -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } | iex;
 ninja-universal.ps1 -Install
 ```
 

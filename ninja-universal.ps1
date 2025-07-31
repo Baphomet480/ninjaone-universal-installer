@@ -138,8 +138,8 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
     }
     # Connect to NinjaOne API using client credentials
     if (-not $Region) { $Region = 'US' }
-    Connect-NinjaOne -ClientId $CID -ClientSecret $CSC `
-        -Instance $Region -Scopes management,monitoring -UseClientAuth
+Connect-NinjaOne -ClientId $CID -ClientSecret $CSC `
+    -Instance $Region.ToLower() -Scopes management,monitoring -UseClientAuth
 }
 
 # ── choose Org & Location ─────────────────────────────────────────────

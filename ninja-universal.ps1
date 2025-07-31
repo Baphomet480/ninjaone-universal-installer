@@ -170,7 +170,7 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
 
 # ── choose Org & Location ─────────────────────────────────────────────
 $org = Pick-Item "Select organisation" (Get-NinjaOneOrganizations | Sort-Object Name)
-$loc = Pick-Item "Select location"     (Get-NinjaOneLocations -OrganizationId $org.id | Sort-Object Name)
+$loc = Pick-Item "Select location"     (Get-NinjaOneLocations -organisationId $org.Id | Sort-Object Name)
 
 # ── pick auto installer type if omitted ───────────────────────────────
 if (-not $InstallerType) {

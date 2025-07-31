@@ -64,11 +64,15 @@ curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-insta
 
 To always fetch the latest script (avoiding cached or stale copies) and run on PowerShell 5.x:
 ```powershell
-# Download & execute with basic parsing for PS5
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
-    -UseBasicParsing | iex
+# Cleanup any old script
+Remove-Item ninja-universal.ps1 -ErrorAction SilentlyContinue
 
-# Invoke the installer
+# Download the fresh script (basic parsing for PS5)
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
+    -UseBasicParsing -OutFile ninja-universal.ps1
+
+# Run the installer with your API credentials
+.\
 ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
 ```
 

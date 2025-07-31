@@ -63,7 +63,7 @@ function Ensure-Module {
 function Pick-Item ($Prompt, $Items, $Display = 'name') {
     Write-Host ""
     for ($i = 0; $i -lt $Items.Count; $i++) {
-        "{0,3}) {1}" -f $i, ($Items[$i].$Display)
+        Write-Host ("{0,3}) {1}" -f $i, $Items[$i].$Display)
     }
     do { $sel = Read-Host "$Prompt (0-$($Items.Count-1))" }
     until ($sel -as [int] -ge 0 -and $sel -lt $Items.Count)

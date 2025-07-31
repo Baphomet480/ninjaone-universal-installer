@@ -129,17 +129,13 @@ if (-not $CID -or -not $CSC) {
 }
 
 # Allow "NA" (North America) as an alias for the default "US" cloud
-if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
+$Region = if ($Region.ToUpper() -eq 'NA') { 'US' } else { $Region }
 
-{
-    # Connect to NinjaOne API using client credentials (client-only flow)
-    if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
-        throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
-    }
-    # Connect to NinjaOne API using client credentials
-    if (-not $Region) { $Region = 'US' }
-Connect-NinjaOne -ClientId $CID -ClientSecret $CSC -Instance $Region.ToLower() -Scopes management,monitoring -UseClientAuth
+# Connect to NinjaOne API using client credentials (client-only flow)
+if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
+    throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
 }
+Connect-NinjaOne -ClientId $CID -ClientSecret $CSC -Instance $Region.ToLower() -Scopes management,monitoring -UseClientAuth
 
 # ── choose Org & Location ─────────────────────────────────────────────
 $org = Pick-Item "Select organisation" (Get-NinjaOneOrganizations | Sort-Object Name)

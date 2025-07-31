@@ -27,6 +27,15 @@ pwsh -NoProfile -Command "
   ./ninja-universal.ps1 -Install -ClientId '<client-id>' -ClientSecret '<secret>'"
 ```
 
+```powershell
+# Or on Windows PowerShell 5.x (requires -UseBasicParsing)
+iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
+    -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }).Content
+.
+ninja-universal.ps1 -Install -ClientId '<client-id>' -ClientSecret '<secret>' -Region US
+```
+```
+
 ## Requirements
 
 - PowerShell 5.x on Windows or PowerShell 7+ (`pwsh`) on supported Linux distributions.

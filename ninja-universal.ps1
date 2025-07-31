@@ -22,7 +22,7 @@
     Tenant region. Valid values: NA (default), EU, OC.
 .
 .PARAMETER InstallerType
-    Installer type. Valid values: WINDOWS_MSI, LINUX_DEB, LINUX_RPM, MAC_PKG. Auto-chosen if omitted.
+    Installer type (optional). Valid values: WINDOWS_MSI, LINUX_DEB, LINUX_RPM, MAC_PKG. Auto-chosen if omitted.
 .
 .PARAMETER ClientId
     NinjaOne API client Id (overrides NINJA_CLIENT_ID env var).
@@ -45,8 +45,7 @@ param (
     [switch]$NoGui,
     [ValidateSet('NA','EU','OC')]
     [string]$Region = 'NA',
-    [ValidateSet('WINDOWS_MSI','LINUX_DEB','LINUX_RPM','MAC_PKG')]
-    [string]$InstallerType,
+[string]$InstallerType,
     [string]$ClientId,
     [string]$ClientSecret
 )

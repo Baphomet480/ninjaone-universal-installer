@@ -74,11 +74,27 @@ ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
 
 #### Cache‑busting (if behind a proxy/CDN)
 
-If you encounter caching issues, append a timestamp query to force a fresh download:
+If you encounter caching issues, you can force a fresh download in two ways:
+
+1. **Timestamp query**
 ```powershell
 $ts = Get-Date -UFormat %s
 iwr "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1?t=$ts" `
     -UseBasicParsing | iex
+```
+
+2. **No-cache header** (PowerShell 5.x)
+```powershell
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
+    -UseBasicParsing `
+    -Headers @{ 'Cache-Control' = 'no-cache' } | iex
+```
+
+Or using **curl** from a standard shell (Bash, sh, etc.):
+```bash
+curl -H 'Cache-Control: no-cache' -sSL \
+  https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
+  | pwsh -c - -Install -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
 ## Parameters

@@ -171,30 +171,30 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
   ```powershell
   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
   ```
-- If GUI libraries fail on Linux, retry with `-NoGui` to skip GUI dependencies.
--- If you see "No organisations found.", verify your API credentials and region/instance:
-  ```powershell
-  # Check module parameters
-  Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
+-- If GUI libraries fail on Linux, retry with `-NoGui` to skip GUI dependencies.
+- If you see "No organisations found.", verify your API credentials and region/instance:
+```powershell
+# Check module parameters
+Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
 
-  # Try manual connect and list orgs
-  $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
-  $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-  Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET `
+# Try manual connect and list orgs
+$Env:NINJA_CLIENT_ID     = 'YOUR_ID'
+$Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
+Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
     -Instance US -UseClientAuth -Scopes @('management','monitoring')
-  Get-NinjaOneOrganizations
+Get-NinjaOneOrganizations
 
-  # Now list and pick an organisation and location interactively:
-  $orgs = Get-NinjaOneOrganizations | Sort-Object Name
-  for ($i=0; $i -lt $orgs.Count; $i++) { "{0}) {1}" -f $i, $orgs[$i].Name }
-  $idx = Read-Host "Select organisation (0-$($orgs.Count-1))"
-  $org = $orgs[$idx]
+# Now list and pick an organisation and location interactively:
+$orgs = Get-NinjaOneOrganizations | Sort-Object Name
+for ($i=0; $i -lt $orgs.Count; $i++) { "{0}) {1}" -f $i, $orgs[$i].Name }
+$idx = Read-Host "Select organisation (0-$($orgs.Count-1))"
+$org = $orgs[$idx]
 
-  $locs = Get-NinjaOneLocations -OrganizationId $org.Id | Sort-Object Name
-  for ($i=0; $i -lt $locs.Count; $i++) { "{0}) {1}" -f $i, $locs[$i].Name }
-  $idx = Read-Host "Select location (0-$($locs.Count-1))"
-  $loc = $locs[$idx]
-  ```
+$locs = Get-NinjaOneLocations -OrganizationId $org.Id | Sort-Object Name
+for ($i=0; $i -lt $locs.Count; $i++) { "{0}) {1}" -f $i, $locs[$i].Name }
+$idx = Read-Host "Select location (0-$($locs.Count-1))"
+$loc = $locs[$idx]
+```
 
 ---
 

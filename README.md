@@ -142,12 +142,13 @@ ninja-universal.ps1 -Region NA -Install
 
 ### One‑liner with env vars and no-cache (Windows PowerShell)
 
-To set your API creds, bypass cache, and run in one pipe, use:
+To set your API creds, bypass cache, and run in one pipe without printing the script text, use:
 ```powershell
-ninjaone> $Env:NINJA_CLIENT_ID     = 'YOUR_ID'; $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
-    -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } | iex;
-ninja-universal.ps1 -Region NA -Install
+$Env:NINJA_CLIENT_ID     = 'YOUR_ID'; $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
+iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
+    -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }).Content;
+# Then invoke the installer against the US region:
+.\n+ninja-universal.ps1 -Region NA -Install
 ```
 
 

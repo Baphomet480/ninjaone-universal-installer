@@ -117,8 +117,13 @@ if (-not $CID -or -not $CSC) {
     if (-not $connCmd) {
         throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
     }
-    # Use client-based auth and minimal scope to avoid interactive prompts
-    $splat = @{ ClientId = $CID; ClientSecret = $CSC; UseClientAuth = $true; Scopes = 'management' }
+    # Use client-based auth with management and monitoring scopes to avoid interactive prompts
+    $splat = @{
+        ClientId     = $CID
+        ClientSecret = $CSC
+        UseClientAuth= $true
+        Scopes       = @('management','monitoring')
+    }
     if ($connCmd.Parameters.ContainsKey('Region')) {
         # newer module versions accept -Region
         $splat.Region = $Region

@@ -181,7 +181,7 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
   $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
   $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
   Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET `
-    -Instance US -UseClientAuth -Scopes management
+    -Instance US -UseClientAuth -Scopes @('management','monitoring')
   Get-NinjaOneOrganizations
 
   # Now list and pick an organisation and location interactively:

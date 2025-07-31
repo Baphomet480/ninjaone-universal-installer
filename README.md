@@ -160,7 +160,7 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 | `-Install`      | Install the agent after downloading                                | `false` |
 | `-Gui`          | Force-install GUI libraries on Linux                               | auto    |
 | `-NoGui`        | Force-skip GUI libraries on Linux                                  | auto    |
-| `-Region`       | Tenant region/instance (`US`, `US2`, `CA`, `EU`, `OC`)           | `US`    |
+| `-Region`       | Tenant region/instance (`US`, `US2`, `CA`, `EU`, `OC`, `NA`)     | `US`    |
 | `-InstallerType`| Installer type (`WINDOWS_MSI`,`LINUX_DEB`,`LINUX_RPM`,`MAC_PKG`)    | auto    |
 | `-ClientId`     | NinjaOne API client Id                                             |         |
 | `-ClientSecret` | NinjaOne API client secret                                         |         |
@@ -178,11 +178,19 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
 
-# Try manual connect and list orgs
+# Try manual connect and list orgs (choose -Region or -Instance per module version)
 $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
 $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
+$Region                 = 'US'
+
+# for newer module versions:
 Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Instance US -UseClientAuth -Scopes @('management','monitoring')
+    -Region $Region -UseClientAuth -Scopes @('management','monitoring')
+
+# for older module versions:
+Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
+    -Instance $Region -UseClientAuth -Scopes @('management','monitoring')
+
 Get-NinjaOneOrganizations
 
 ### Manual pick: organisation & location

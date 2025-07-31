@@ -89,16 +89,25 @@ iwr "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/
 
 2. **No-cache header** (PowerShell 5.x)
 ```powershell
+# Remove any old script
+Remove-Item ninja-universal.ps1 -ErrorAction SilentlyContinue
+
+# Download fresh copy with no-cache header
 iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
     -UseBasicParsing `
-    -Headers @{ 'Cache-Control' = 'no-cache' } | iex
+    -Headers @{ 'Cache-Control' = 'no-cache' } `
+    -OutFile ninja-universal.ps1
+
+# Run with your API credentials
+.\
+ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
 ```
 
-Or using **curl** from a standard shell (Bash, sh, etc.):
+Or with **curl** in Bash/sh (pipe directly to PowerShell):
 ```bash
 curl -H 'Cache-Control: no-cache' -sSL \
-  https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
-  | pwsh -c - -Install -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
+  https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 | \
+  pwsh -c - -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
 ```
 
 ## Parameters

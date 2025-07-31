@@ -178,13 +178,12 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
 
-# Try manual connect and list orgs (ensure lowercase instance)
+# Try manual connect and list orgs
 $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
 $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-$Instance               = 'us'
 
 Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Instance $Instance.ToLower() -UseClientAuth -Scopes @('management','monitoring')
+    -Instance US -Scopes management,monitoring -UseClientAuth
 
 Get-NinjaOneOrganizations
 

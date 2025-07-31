@@ -170,7 +170,7 @@ $ext  = ($InstallerType -split '_')[-1].ToLower()
 $Out  = Join-Path ([IO.Path]::GetTempPath()) "ninja.$ext"
 
 Write-Host "[INFO] Downloading → $Out …" -ForegroundColor Cyan
-Invoke-WebRequest $link.url -OutFile $Out
+Invoke-WebRequest $link.url -UseBasicParsing -OutFile $Out
 
 # ── Decide if GUI libs needed on Linux─────────────────────────────────
 function Test-GuiPresent {

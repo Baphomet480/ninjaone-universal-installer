@@ -12,19 +12,16 @@ Runs unmodified on **Windows PowerShell 5.x** *and* **PowerShell 7+** on Ubuntu 
 
 ---
 
-## Quick usage
+# Quick usage
 
-```powershell
-## Quick usage
 ```powershell
 # Remove any local copy, download latest script, then install headless
 Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue
 iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
-   -UseBasicParsing `
-   -Headers @{ 'Cache-Control' = 'no-cache' } `
-   -OutFile ninja-universal.ps1
-pwsh -NoProfile -Command "
-  ./ninja-universal.ps1 -Install -ClientId '<client-id>' -ClientSecret '<secret>'"
+    -UseBasicParsing `
+    -Headers @{ 'Cache-Control' = 'no-cache' } `
+    -OutFile ninja-universal.ps1
+pwsh -NoProfile -Command "./ninja-universal.ps1 -Install -ClientId '<client-id>' -ClientSecret '<secret>'"
 ```
 
 ```powershell

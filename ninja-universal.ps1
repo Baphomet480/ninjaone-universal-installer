@@ -138,9 +138,11 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
         throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
     }
     # Use client-based auth with management and monitoring scopes to avoid interactive prompts
+    # Prepare parameters for client-based auth (switch parameter presence triggers client credentials flow)
     $splat = @{
         ClientId     = $CID
         ClientSecret = $CSC
+        # UseClientAuth is a switch; setting to $true includes the flag
         UseClientAuth= $true
         Scopes       = @('management','monitoring')
     }

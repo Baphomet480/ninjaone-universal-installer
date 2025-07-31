@@ -142,7 +142,7 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
         ClientId      = $CID
         ClientSecret  = $CSC
         UseClientAuth = $true           # client-credentials grant
-        Scopes        = 'management'    # ONLY the scope you ticked
+        Scopes        = @('management','monitoring')    # request both management and monitoring scopes
         Instance      = $Region.ToLower()  # us, us2, ca, eu, oc
     }
     Connect-NinjaOne @connectSplat

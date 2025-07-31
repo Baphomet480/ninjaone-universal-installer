@@ -150,10 +150,6 @@ iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/m
 ninja-universal.ps1 -Install
 ```
 
-If you get `Connect-NinjaOne : A parameter cannot be found that matches parameter name 'Region'`, update your NinjaOne PowerShell module to a version that supports `-Region`:
-```powershell
-Install-Module -Name NinjaOne -Scope CurrentUser -Force
-``` 
 
 ## Parameters
 

@@ -178,18 +178,13 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
 
-# Try manual connect and list orgs (choose -Region or -Instance per module version)
+# Try manual connect and list orgs
 $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
 $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-$Region                 = 'US'
+$Instance               = 'us'
 
-# for newer module versions:
 Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Region $Region -UseClientAuth -Scopes @('management','monitoring')
-
-# for older module versions:
-Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Instance $Region -UseClientAuth -Scopes @('management','monitoring')
+    -Instance $Instance -UseClientAuth -Scopes @('management','monitoring')
 
 Get-NinjaOneOrganizations
 

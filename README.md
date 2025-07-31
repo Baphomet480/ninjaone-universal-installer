@@ -194,7 +194,7 @@ for ($i=0; $i -lt $orgs.Count; $i++) { "{0}) {1}" -f $i, $orgs[$i].Name }
 $idx = Read-Host "Select organisation (0-$($orgs.Count-1))"
 $org = $orgs[$idx]
 
-$locs = Get-NinjaOneOrganizationLocations -OrganizationId $org.Id | Sort-Object Name
+$locs = Get-NinjaOneLocations -OrganizationId $org.Id | Sort-Object Name
 for ($i=0; $i -lt $locs.Count; $i++) { "{0}) {1}" -f $i, $locs[$i].Name }
 $idx = Read-Host "Select location (0-$($locs.Count-1))"
 $loc = $locs[$idx]

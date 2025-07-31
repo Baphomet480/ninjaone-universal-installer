@@ -170,6 +170,17 @@ ninja-universal.ps1 -Region NA -Install
   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
   ```
 - If GUI libraries fail on Linux, retry with `-NoGui` to skip GUI dependencies.
+-- If you see "No organisations found.", verify your API credentials and region/instance:
+  ```powershell
+  # Check module parameters
+  Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
+
+  # Try manual connect and list orgs
+  $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
+  $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
+  Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET -Instance US
+  Get-NinjaOneOrganizations
+  ```
 
 ---
 

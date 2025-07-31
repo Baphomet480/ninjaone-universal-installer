@@ -36,8 +36,10 @@ case "$ID" in
     echo "Installing PowerShell via yum/dnf..."
     # Install prerequisites
     yum install -y wget
-    # Import MS repo
-    rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm
+    # Import Microsoft repository for RHEL-compatible distro version
+    RHELVER=${VERSION_ID%%.*}
+    if [ "$RHELVER" -lt 8 ]; then RHELVER=7; fi
+    rpm -Uvh https://packages.microsoft.com/config/rhel/${RHELVER}/packages-microsoft-prod.rpm
     # Install PowerShell
     if command -v dnf >/dev/null 2>&1; then
         dnf install -y powershell

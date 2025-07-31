@@ -19,35 +19,58 @@ echo "Detected OS: $NAME $VERSION_ID"
 case "$ID" in
   ubuntu|debian)
     echo "Installing PowerShell via apt..."
-    # Install prerequisites
+    # Prerequisites
+
+    # Update the list of packages
     apt-get update -y
+
+    # Install pre-requisite packages
     apt-get install -y wget apt-transport-https software-properties-common
-    # Import Microsoft repository GPG keys
-    wget -O- https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-    # Register the repo
-    DISTRO="${ID}_${VERSION_ID%.*}"
-    add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/microsoft-${ID}-${VERSION_ID%.*}-prod $(lsb_release -cs) main"
-    # Install PowerShell
+
+    # Get the version of Ubuntu
+    source /etc/os-release
+
+    # Download the Microsoft repository keys
+    wget -q https://packages.microsoft.com/config/ubuntu/${VERSION_ID}/packages-microsoft-prod.deb
+
+    # Register the Microsoft repository keys
+    dpkg -i packages-microsoft-prod.deb
+
+    # Delete the Microsoft repository keys file
+    rm -f packages-microsoft-prod.deb
+
+    # Update the list of packages after adding packages.microsoft.com
     apt-get update -y
+
+    # Install PowerShell
     apt-get install -y powershell
     ;;
 
   rhel|centos|rocky|almalinux)
     echo "Installing PowerShell via yum/dnf..."
-    # Install prerequisites
-    yum install -y wget
-    # Import Microsoft repository for RHEL-compatible distro version
-    # Use Microsoft repo for RHEL7 or RHEL8 (any newer RHEL-based distro uses RHEL8 repo)
-    RHELVER=${VERSION_ID%%.*}
-    if [ "$RHELVER" -ge 8 ]; then RHELVER=8; else RHELVER=7; fi
-    echo "Using Microsoft RHEL${RHELVER} repository"
-    rpm -Uvh https://packages.microsoft.com/config/rhel/${RHELVER}/packages-microsoft-prod.rpm
-    # Install PowerShell
-    if command -v dnf >/dev/null 2>&1; then
-        dnf install -y powershell
-    else
-        yum install -y powershell
+    # Prerequisites
+
+    # Get version of RHEL
+    source /etc/os-release
+    if [ ${VERSION_ID%.*} -lt 8 ]
+    then majorver=7
+    elif [ ${VERSION_ID%.*} -lt 9 ]
+    then majorver=8
+    else majorver=9
     fi
+
+    # Download the Microsoft RedHat repository package
+    curl -sSL -O https://packages.microsoft.com/config/rhel/$majorver/packages-microsoft-prod.rpm
+
+    # Register the Microsoft RedHat repository
+    rpm -i packages-microsoft-prod.rpm
+
+    # Delete the downloaded package after installing
+    rm -f packages-microsoft-prod.rpm
+
+    # Update package index files and install PowerShell
+    dnf update -y
+    dnf install -y powershell
     ;;
 
   fedora)

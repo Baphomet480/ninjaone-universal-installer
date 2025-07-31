@@ -55,6 +55,13 @@ if (-not $PSBoundParameters.ContainsKey('Install')) {
     $Install = $true
 }
 
+# ── Usage reporting & error tracking ──────────────────────────────────
+Trap {
+    Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Please report this error at https://github.com/baphomet480/ninjaone-universal-installer/issues" -ForegroundColor Yellow
+    Exit 1
+}
+
 # --- Compatibility shim for Windows PowerShell 5.1 ----------------------------
 # Automatic boolean variables like $IsWindows / $IsLinux were introduced in
 # PowerShell 6+.  They are therefore missing when this script is executed under
@@ -186,6 +193,10 @@ if ($IsLinux) {
 
 # ── Install path (if -Install) ────────────────────────────────────────
 if ($Install) {
+    # Warn if not running as root on Linux; package commands may require sudo
+    if ($IsLinux -and ((whoami) -ne 'root')) {
+        Write-Host "[WARN] Not running as root; package installation may fail. Consider re-running under sudo." -ForegroundColor Yellow
+    }
     if ($IsWindows) {
         Write-Host "[INFO] Installing MSI…" -ForegroundColor Cyan
         $old = Get-WmiObject -Class Win32_Product | Where-Object Name -match 'ninjarmm-agent'
@@ -194,29 +205,23 @@ if ($Install) {
         Start-Service ninjarmm-agent -EA SilentlyContinue; Start-Service ninjaone-agent -EA SilentlyContinue
     }
     elseif ($IsLinux) {
-        if ((whoami) -eq 'root') {
-            $sudo = ''
-        }
-        else {
-            $sudo = 'sudo'
-        }
         if ($InstallerType -eq 'LINUX_DEB') {
-            &$sudo apt remove -y ninjarmm-agent 2>/dev/null
+            apt remove -y ninjarmm-agent 2>/dev/null
             if ($AddGuiLibs) {
-                &$sudo apt update -y
-                &$sudo apt install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
+                apt update -y
+                apt install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
             }
-            &$sudo apt install -y "$Out"
+            apt install -y "$Out"
         } else {
-            &$sudo dnf remove -y ninjarmm-agent 2>/dev/null
+            dnf remove -y ninjarmm-agent 2>/dev/null
             if ($AddGuiLibs) {
-                &$sudo dnf install -y mesa-libGL mesa-libEGL libX11 libxkbcommon libxkbcommon-x11
+                dnf install -y mesa-libGL mesa-libEGL libX11 libxkbcommon libxkbcommon-x11
             }
-            &$sudo dnf install -y "$Out"
+            dnf install -y "$Out"
         }
-        &$sudo systemctl daemon-reload
+        systemctl daemon-reload
         foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
-            if (&$sudo systemctl cat $svc 2>$null) { &$sudo systemctl enable --now $svc }
+            if (systemctl cat $svc 2>$null) { systemctl enable --now $svc }
         }
     }
     Write-Host "`n[OK] Agent installed and running." -ForegroundColor Green

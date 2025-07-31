@@ -210,3 +210,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and development setup.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## CLI Reference
+
+For detailed cmdlet syntax, parameters, and examples of the NinjaOne PowerShell module,
+see the [NinjaOne PowerShell Cmdlet Reference](NinjaOne-CmdletHelp.md).

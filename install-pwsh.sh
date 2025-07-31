@@ -37,8 +37,10 @@ case "$ID" in
     # Install prerequisites
     yum install -y wget
     # Import Microsoft repository for RHEL-compatible distro version
+    # Use Microsoft repo for RHEL7 or RHEL8 (any newer RHEL-based distro uses RHEL8 repo)
     RHELVER=${VERSION_ID%%.*}
-    if [ "$RHELVER" -lt 8 ]; then RHELVER=7; fi
+    if [ "$RHELVER" -ge 8 ]; then RHELVER=8; else RHELVER=7; fi
+    echo "Using Microsoft RHEL${RHELVER} repository"
     rpm -Uvh https://packages.microsoft.com/config/rhel/${RHELVER}/packages-microsoft-prod.rpm
     # Install PowerShell
     if command -v dnf >/dev/null 2>&1; then

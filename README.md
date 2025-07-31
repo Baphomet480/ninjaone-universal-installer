@@ -160,7 +160,7 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 
 | Parameter       | Description                                                        | Default |
 | --------------- | ------------------------------------------------------------------ | ------- |
-| `-Install`      | Install the agent after downloading                                | `false` |
+| `-Install`      | Install the agent after downloading (default: install)             | `true`  |
 | `-Gui`          | Force-install GUI libraries on Linux                               | auto    |
 | `-NoGui`        | Force-skip GUI libraries on Linux                                  | auto    |
 | `-Region`       | Tenant region/instance (`US`, `US2`, `CA`, `EU`, `OC`, `NA`)     | `US`    |

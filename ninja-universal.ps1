@@ -50,6 +50,11 @@ param (
     [string]$ClientSecret
 )
 
+# Default to install behavior if -Install not specified
+if (-not $PSBoundParameters.ContainsKey('Install')) {
+    $Install = $true
+}
+
 # --- Compatibility shim for Windows PowerShell 5.1 ----------------------------
 # Automatic boolean variables like $IsWindows / $IsLinux were introduced in
 # PowerShell 6+.  They are therefore missing when this script is executed under

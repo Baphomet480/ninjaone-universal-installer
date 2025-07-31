@@ -43,7 +43,7 @@ param (
     [switch]$Install,
     [switch]$Gui,
     [switch]$NoGui,
-[ValidateSet('US','US2','CA','EU','OC')]
+[ValidateSet('US','US2','CA','EU','OC','NA')]
     [string]$Region = 'US',
 [string]$InstallerType,
     [string]$ClientId,
@@ -127,6 +127,9 @@ $CSC = if ($ClientSecret) { $ClientSecret } elseif ($Env:NINJA_CLIENT_SECRET) { 
 if (-not $CID -or -not $CSC) {
     throw "Provide -ClientId / -ClientSecret or set NINJA_CLIENT_ID / NINJA_CLIENT_SECRET."
 }
+
+# Allow "NA" (North America) as an alias for the default "US" cloud
+if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
 
 {
     # Connect to NinjaOne API; include -Region only if supported by the module version

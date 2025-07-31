@@ -47,9 +47,38 @@ To use this script, you must supply a NinjaOne API Client Id and Client Secret.
 .\ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
+## Installing PowerShell on Linux
+
+You can install PowerShell on popular Linux distributions using our helper script:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-pwsh.sh | sudo bash
+```
+
 ### Download and install automatically
 ```powershell
 .\ninja-universal.ps1 -Install -Region EU -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
+```
+
+### Running on Windows PowerShell 5.x
+
+To always fetch the latest script (avoiding cached or stale copies) and run on PowerShell 5.x:
+```powershell
+# Download & execute with basic parsing for PS5
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
+    -UseBasicParsing | iex
+
+# Invoke the installer
+ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
+```
+
+#### Cache‑busting (if behind a proxy/CDN)
+
+If you encounter caching issues, append a timestamp query to force a fresh download:
+```powershell
+$ts = Get-Date -UFormat %s
+iwr "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1?t=$ts" `
+    -UseBasicParsing | iex
 ```
 
 ## Parameters

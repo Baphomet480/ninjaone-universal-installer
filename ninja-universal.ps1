@@ -132,42 +132,11 @@ if (-not $CID -or -not $CSC) {
 if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
 
 {
-    # Connect to NinjaOne API; prefer -Instance, then -Region, else -EnvironmentURI based on module version
-    $connCmd = Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue
-    if (-not $connCmd) {
+    # Connect to NinjaOne API using client credentials (instance must match module expectations)
+    if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
         throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
     }
-    # Use client-based auth with management and monitoring scopes to avoid interactive prompts
-    # Prepare parameters for client-based auth (switch parameter presence triggers client credentials flow)
-    $splat = @{
-        ClientId     = $CID
-        ClientSecret = $CSC
-        # UseClientAuth is a switch; setting to $true includes the flag
-        UseClientAuth= $true
-        Scopes       = @('management','monitoring')
-    }
-    if ($connCmd.Parameters.ContainsKey('Instance')) {
-        # use -Instance as provided (e.g. US)
-        $splat.Instance = $Region
-    }
-    elseif ($connCmd.Parameters.ContainsKey('Region')) {
-        # newer module versions accept -Region
-        $splat.Region = $Region
-    }
-    elseif ($connCmd.Parameters.ContainsKey('EnvironmentURI')) {
-        # very old modules expect a full URI instead of region code
-        $splat.EnvironmentURI = switch ($Region.ToUpper()) {
-            'EU'  { 'https://eu.ninjarmm.com' }
-            'OC'  { 'https://oc.ninjarmm.com' }
-            'CA'  { 'https://ca.ninjarmm.com' }
-            'US2' { 'https://us2.ninjarmm.com' }
-            Default { 'https://app.ninjarmm.com' }
-        }
-    }
-    else {
-        throw "Connect-NinjaOne: no parameter for region/instance/environmentUri found."
-    }
-    Connect-NinjaOne @splat
+    Connect-NinjaOne -ClientId $CID -ClientSecret $CSC -Instance $Region -Scopes management,monitoring -UseClientAuth
 }
 
 # ── choose Org & Location ─────────────────────────────────────────────

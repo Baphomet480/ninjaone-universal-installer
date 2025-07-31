@@ -119,7 +119,12 @@ if (-not $CID -or -not $CSC) {
     }
     $splat = @{ ClientId = $CID; ClientSecret = $CSC }
     if ($connCmd.Parameters.ContainsKey('Region')) {
+        # newer module versions accept -Region
         $splat.Region = $Region
+    }
+    elseif ($connCmd.Parameters.ContainsKey('Instance')) {
+        # older/newer alias uses -Instance for region/tenant
+        $splat.Instance = $Region
     }
     Connect-NinjaOne @splat
 }

@@ -114,11 +114,12 @@ curl -H 'Cache-Control: no-cache' -sSL \
 
 If you really need a single line in a Windows PowerShell prompt (no intermediate file), you can download to a temp file and immediately invoke it:
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command \
-  "$t = [IO.Path]::Combine([IO.Path]::GetTempPath(), 'ninja-universal.ps1'); \
-   Invoke-WebRequest 'https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1' -UseBasicParsing `
-       -Headers @{'Cache-Control'='no-cache'} -OutFile $t; \
-   & $t -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "
+    $t = [IO.Path]::Combine([IO.Path]::GetTempPath(), 'ninja-universal.ps1');
+    Invoke-WebRequest 'https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1' 
+        -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile $t;
+    & $t -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
+"
 ```
 
 ## Parameters

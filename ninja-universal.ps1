@@ -111,7 +111,18 @@ if (-not $CID -or -not $CSC) {
     throw "Provide -ClientId / -ClientSecret or set NINJA_CLIENT_ID / NINJA_CLIENT_SECRET."
 }
 
-Connect-NinjaOne -ClientId $CID -ClientSecret $CSC -Region $Region
+{
+    # Connect to NinjaOne API; include -Region only if supported by the module version
+    $connCmd = Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue
+    if (-not $connCmd) {
+        throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
+    }
+    $splat = @{ ClientId = $CID; ClientSecret = $CSC }
+    if ($connCmd.Parameters.ContainsKey('Region')) {
+        $splat.Region = $Region
+    }
+    Connect-NinjaOne @splat
+}
 
 # ── choose Org & Location ─────────────────────────────────────────────
 $org = Pick-Item "Select organisation" (Get-NinjaOneOrganization | Sort-Object name)

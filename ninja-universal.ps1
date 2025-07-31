@@ -120,9 +120,20 @@ $loc = Pick-Item "Select location"     (Get-NinjaOneLocation -OrganizationId $or
 
 # ── pick auto installer type if omitted ───────────────────────────────
 if (-not $InstallerType) {
-    if     ($IsWindows) { $InstallerType = 'WINDOWS_MSI' }
-    elseif ($IsLinux)   { $InstallerType = (Get-Command apt -EA 0) ? 'LINUX_DEB' : 'LINUX_RPM' }
-    else                { $InstallerType = 'MAC_PKG' }
+if     ($IsWindows) {
+    $InstallerType = 'WINDOWS_MSI'
+}
+elseif ($IsLinux) {
+    if (Get-Command apt -ErrorAction SilentlyContinue) {
+        $InstallerType = 'LINUX_DEB'
+    }
+    else {
+        $InstallerType = 'LINUX_RPM'
+    }
+}
+else {
+    $InstallerType = 'MAC_PKG'
+}
 }
 
 # ── Generate installer URL & download ─────────────────────────────────
@@ -155,7 +166,12 @@ if ($Install) {
         Start-Service ninjarmm-agent -EA SilentlyContinue; Start-Service ninjaone-agent -EA SilentlyContinue
     }
     elseif ($IsLinux) {
-        $sudo = ((whoami) -eq 'root') ? '' : 'sudo'
+        if ((whoami) -eq 'root') {
+            $sudo = ''
+        }
+        else {
+            $sudo = 'sudo'
+        }
         if ($InstallerType -eq 'LINUX_DEB') {
             &$sudo apt remove -y ninjarmm-agent 2>/dev/null
             if ($AddGuiLibs) {

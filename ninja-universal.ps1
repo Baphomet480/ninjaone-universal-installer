@@ -136,6 +136,8 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
     if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
         throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
     }
+    # ensure Region is set for interactive use
+    if (-not $Region) { $Region = 'US' }
     $connectSplat = @{ 
         ClientId      = $CID
         ClientSecret  = $CSC

@@ -142,6 +142,7 @@ ninja-universal.ps1 -Region NA -Install
 
 ### One‑liner with env vars and no-cache (Windows PowerShell)
 
+Make sure you set your NinjaOne API credentials **before** invoking the installer.
 To set your API creds, bypass cache, and run in one pipe without printing the script text, use:
 ```powershell
 $Env:NINJA_CLIENT_ID     = 'YOUR_ID'; $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'

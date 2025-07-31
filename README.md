@@ -158,7 +158,7 @@ ninja-universal.ps1 -Region NA -Install
 | `-Install`      | Install the agent after downloading                                | `false` |
 | `-Gui`          | Force-install GUI libraries on Linux                               | auto    |
 | `-NoGui`        | Force-skip GUI libraries on Linux                                  | auto    |
-| `-Region`       | Tenant region/instance (`NA`, `EU`, `OC`)                         | `NA`    |
+| `-Region`       | Tenant region/instance (`US`, `US2`, `CA`, `EU`, `OC`)           | `US`    |
 | `-InstallerType`| Installer type (`WINDOWS_MSI`,`LINUX_DEB`,`LINUX_RPM`,`MAC_PKG`)    | auto    |
 | `-ClientId`     | NinjaOne API client Id                                             |         |
 | `-ClientSecret` | NinjaOne API client secret                                         |         |

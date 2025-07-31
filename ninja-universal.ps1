@@ -19,7 +19,7 @@
     Force-skip GUI libraries on Linux (default: auto-detect).
 .
 .PARAMETER Region
-    Tenant region. Valid values: NA (default), EU, OC.
+    Tenant region. Valid values: US (default), US2, CA, EU, OC.
 .
 .PARAMETER InstallerType
     Installer type (optional). Valid values: WINDOWS_MSI, LINUX_DEB, LINUX_RPM, MAC_PKG. Auto-chosen if omitted.
@@ -43,8 +43,8 @@ param (
     [switch]$Install,
     [switch]$Gui,
     [switch]$NoGui,
-    [ValidateSet('NA','EU','OC')]
-    [string]$Region = 'NA',
+[ValidateSet('US','US2','CA','EU','OC')]
+    [string]$Region = 'US',
 [string]$InstallerType,
     [string]$ClientId,
     [string]$ClientSecret
@@ -123,8 +123,21 @@ if (-not $CID -or -not $CSC) {
         $splat.Region = $Region
     }
     elseif ($connCmd.Parameters.ContainsKey('Instance')) {
-        # older/newer alias uses -Instance for region/tenant
+        # older module versions use -Instance in place of Region
         $splat.Instance = $Region
+    }
+    elseif ($connCmd.Parameters.ContainsKey('EnvironmentURI')) {
+        # very old modules expect a full URI instead of region code
+        $splat.EnvironmentURI = switch ($Region.ToUpper()) {
+            'EU'  { 'https://eu.ninjarmm.com' }
+            'OC'  { 'https://oc.ninjarmm.com' }
+            'CA'  { 'https://ca.ninjarmm.com' }
+            'US2' { 'https://us2.ninjarmm.com' }
+            Default { 'https://app.ninjarmm.com' }
+        }
+    }
+    else {
+        throw "Connect-NinjaOne: no parameter for region/instance/environmentUri found."
     }
     Connect-NinjaOne @splat
 }

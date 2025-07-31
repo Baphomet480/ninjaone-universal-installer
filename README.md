@@ -181,6 +181,17 @@ ninja-universal.ps1 -Region NA -Install
   Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET `
     -Instance US -UseClientAuth -Scopes management
   Get-NinjaOneOrganizations
+
+  # Now list and pick an organisation and location interactively:
+  $orgs = Get-NinjaOneOrganizations | Sort-Object Name
+  for ($i=0; $i -lt $orgs.Count; $i++) { "{0}) {1}" -f $i, $orgs[$i].Name }
+  $idx = Read-Host "Select organisation (0-$($orgs.Count-1))"
+  $org = $orgs[$idx]
+
+  $locs = Get-NinjaOneLocations -OrganizationId $org.Id | Sort-Object Name
+  for ($i=0; $i -lt $locs.Count; $i++) { "{0}) {1}" -f $i, $locs[$i].Name }
+  $idx = Read-Host "Select location (0-$($locs.Count-1))"
+  $loc = $locs[$idx]
   ```
 
 ---

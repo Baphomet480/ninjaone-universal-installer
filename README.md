@@ -174,6 +174,9 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 -- If GUI libraries fail on Linux, retry with `-NoGui` to skip GUI dependencies.
 - If you see "No organisations found.", first check your console scrollback for the printed org list (it appears above the prompt). \
   If truly empty, verify your API credentials and region/instance:
+- If you get an "insufficient_privileges" error at connect, ensure your client credentials
+  have both `management` and `monitoring` scopes granted (or use `-UseWebAuth`/`-UseTokenAuth`
+  for delegated flows if client-only access lacks permissions).
 ```powershell
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters

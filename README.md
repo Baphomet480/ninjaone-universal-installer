@@ -183,7 +183,7 @@ $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
 $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
 
 Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Instance US -Scopes management,monitoring -UseClientAuth
+    -Instance us -Scopes management,monitoring -UseClientAuth
 
 Get-NinjaOneOrganizations
 

@@ -147,8 +147,8 @@ if ($Region.ToUpper() -eq 'NA') { $Region = 'US' }
         Scopes       = @('management','monitoring')
     }
     if ($connCmd.Parameters.ContainsKey('Instance')) {
-        # prefer -Instance in older and current modules
-        $splat.Instance = $Region
+        # prefer -Instance in older and current modules; ensure lowercase
+        $splat.Instance = $Region.ToLower()
     }
     elseif ($connCmd.Parameters.ContainsKey('Region')) {
         # newer module versions accept -Region

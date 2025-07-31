@@ -189,13 +189,8 @@ Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
  $Region               = 'us'
 
 ```powershell
-$connectSplat = @{ 
-    ClientId      = $Env:NINJA_CLIENT_ID
-    ClientSecret  = $Env:NINJA_CLIENT_SECRET
-    UseClientAuth = $true                # client-credentials grant
-    Scopes        = @('management','monitoring')  # include both management and monitoring scopes
-    Instance      = $Region.ToLower()           # us, us2, ca, eu, oc
-}
+Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
+    -Instance $Region -Scopes management,monitoring -UseClientAuth
 ```
 
 Connect-NinjaOne @connectSplat

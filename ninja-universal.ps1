@@ -221,6 +221,8 @@ if ($Install) {
     elseif ($IsLinux) {
         if ($InstallerType -eq 'LINUX_DEB') {
             # Remove any existing NinjaOne Agent packages to avoid pre-inst constraint
+            # Try dpkg purge fallbacks for internal agent variants, then apt remove
+            dpkg --purge ninjaone-agent* 2>/dev/null | Out-Null
             apt remove -y ninjarmm-agent ninjaone-agent* ninjarmm-agent-internal* 2>/dev/null || $true
             if ($AddGuiLibs) {
                 apt update -y

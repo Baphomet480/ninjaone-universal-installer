@@ -100,7 +100,12 @@ function Pick-Item ($Prompt, $Items, $Display = 'name') {
         Write-Host ("{0,3}) {1}" -f $i, $Items[$i].$Display)
     }
     do {
-        $sel = Read-Host "$Prompt (0-$($Items.Count-1))"
+        # Prompt and read selection; if Read-Host returns empty (e.g. non-interactive stdin), fallback to console input
+        $sel = Read-Host "$Prompt (0-$($Items.Count-1))" -ErrorAction SilentlyContinue
+        if ([string]::IsNullOrWhiteSpace($sel)) {
+            Write-Host -NoNewline "[INPUT] Enter selection: "
+            $sel = [Console]::In.ReadLine()
+        }
         if ([string]::IsNullOrWhiteSpace($sel)) {
             throw "No selection provided. Please rerun the script and choose a valid option."
         }

@@ -63,6 +63,7 @@ fi
 # ── fetch the latest ninja-universal.ps1 (cache-bust with time stamp) ──
 TMP_PS1="/tmp/ninja-universal.ps1"
 curl -fsSL \
+     -H 'Cache-Control: no-cache' \
      "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1?$(date +%s)" \
      -o "$TMP_PS1"
 

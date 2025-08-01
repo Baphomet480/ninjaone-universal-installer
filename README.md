@@ -79,6 +79,8 @@ curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-insta
   | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 
+> **Note:** You must enter a valid selection when prompted for Organization/Location. Leaving it blank will abort the installer.
+
 ### Download and install automatically
 ```powershell
 .\ninja-universal.ps1 -Install -Region EU -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'

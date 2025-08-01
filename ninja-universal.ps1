@@ -99,8 +99,12 @@ function Pick-Item ($Prompt, $Items, $Display = 'name') {
     for ($i = 0; $i -lt $Items.Count; $i++) {
         Write-Host ("{0,3}) {1}" -f $i, $Items[$i].$Display)
     }
-    do { $sel = Read-Host "$Prompt (0-$($Items.Count-1))" }
-    until ($sel -as [int] -ge 0 -and $sel -lt $Items.Count)
+    do {
+        $sel = Read-Host "$Prompt (0-$($Items.Count-1))"
+        if ([string]::IsNullOrWhiteSpace($sel)) {
+            throw "No selection provided. Please rerun the script and choose a valid option."
+        }
+    } until ($sel -as [int] -ge 0 -and $sel -lt $Items.Count)
     return $Items[$sel]
 }
 

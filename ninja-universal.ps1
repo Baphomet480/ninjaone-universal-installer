@@ -220,8 +220,8 @@ if ($Install) {
     }
     elseif ($IsLinux) {
         if ($InstallerType -eq 'LINUX_DEB') {
-            # Remove any existing NinjaOne Agent to avoid pre-inst constraint
-            apt remove -y ninjarmm-agent ninjarmm-agent-internal* 2>/dev/null || $true
+            # Remove any existing NinjaOne Agent packages to avoid pre-inst constraint
+            apt remove -y ninjarmm-agent ninjaone-agent* ninjarmm-agent-internal* 2>/dev/null || $true
             if ($AddGuiLibs) {
                 apt update -y
                 apt install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0

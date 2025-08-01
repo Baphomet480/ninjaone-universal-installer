@@ -12,7 +12,7 @@
     - Adds GUI/OpenGL libraries on Linux when needed.
 .
 .NOTES
-    Version: 0.1.2
+    Version: 0.1.3
 .PARAMETER Install
     Install the agent after downloading (default: download only).
 .
@@ -223,7 +223,7 @@ if ($Install) {
             # Remove any existing NinjaOne Agent packages to avoid pre-inst constraint
             # Purge any existing NinjaOne Agent packages to avoid pre-inst constraint
             try { & dpkg --purge ninjaone-agent* } catch {}
-            try { & apt remove -y ninjarmm-agent ninjaone-agent* ninjaone-agent-internal* } catch {}
+            try { & apt remove -y 'ninja*-agent*' } catch {}
             if ($AddGuiLibs) {
                 apt update -y
                 apt install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0

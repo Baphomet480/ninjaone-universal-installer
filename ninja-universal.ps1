@@ -12,7 +12,7 @@
     - Adds GUI/OpenGL libraries on Linux when needed.
 .
 .NOTES
-    Version: 0.1.3
+    Version: 0.1.4
 .PARAMETER Install
     Install the agent after downloading (default: download only).
 .
@@ -213,10 +213,17 @@ if ($Install) {
     }
     if ($IsWindows) {
         Write-Host "[INFO] Installing MSI…" -ForegroundColor Cyan
-        $old = Get-WmiObject -Class Win32_Product | Where-Object Name -match 'ninjarmm-agent'
-        if ($old) { msiexec /x $old.IdentifyingNumber /qn }
+        # Uninstall any existing NinjaOne MSI packages by matching agent installers
+        $installed = Get-WmiObject -Class Win32_Product | Where-Object Name -match 'ninja.*agent'
+        foreach ($pkg in $installed) {
+            Write-Host "[INFO] Removing existing MSI package: $($pkg.Name)" -ForegroundColor Cyan
+            msiexec /x $pkg.IdentifyingNumber /qn /norestart
+        }
+        # Install this MSI
         Start-Process msiexec -Wait -ArgumentList "/i `"$Out`" /qn /norestart"
-        Start-Service ninjarmm-agent -EA SilentlyContinue; Start-Service ninjaone-agent -EA SilentlyContinue
+        # Start the agent services if present
+        Start-Service ninjarmm-agent -ErrorAction SilentlyContinue
+        Start-Service ninjaone-agent -ErrorAction SilentlyContinue
     }
     elseif ($IsLinux) {
         if ($InstallerType -eq 'LINUX_DEB') {

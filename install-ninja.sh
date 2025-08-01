@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Version: 0.1.0
+# Version: 0.1.1
 set -euo pipefail
 
 ###############################################################################
@@ -13,28 +13,49 @@ set -euo pipefail
 #     | sudo bash -- -Install -ClientId 'xxx' -ClientSecret 'yyy'
 ###############################################################################
 
-# ── locate RHEL major version ───────────────────────────────────────────
+# ==========================================================================
+# Bootstrap PowerShell installation on Debian/Ubuntu or RHEL-based systems
+# ==========================================================================
 source /etc/os-release
-if   [ "${VERSION_ID%%.*}" -lt 8 ]; then majorver=7
-elif [ "${VERSION_ID%%.*}" -lt 9 ]; then majorver=8
-else majorver=9
-fi
-
-# ── add Microsoft repo if missing ───────────────────────────────────────
-if ! rpm -q packages-microsoft-prod &>/dev/null; then
-  echo "[INFO] Adding Microsoft repo for RHEL $majorver …"
-  curl -fsSL -O "https://packages.microsoft.com/config/rhel/$majorver/packages-microsoft-prod.rpm"
-  sudo rpm -i packages-microsoft-prod.rpm
-  rm -f packages-microsoft-prod.rpm
-fi
-
-# ── update repo metadata & install PowerShell 7 ─────────────────────────
-sudo dnf -y update
-if ! command -v pwsh &>/dev/null; then
-  echo "[INFO] Installing PowerShell 7 …"
-  sudo dnf install -y powershell
+if command -v apt-get &>/dev/null; then
+  echo "[INFO] Detecting Debian/Ubuntu: $NAME $VERSION_ID"
+  # Prerequisites
+  apt-get update -y
+  apt-get install -y wget apt-transport-https software-properties-common
+  # Import Microsoft repository keys
+  wget -q https://packages.microsoft.com/config/ubuntu/${VERSION_ID}/packages-microsoft-prod.deb
+  dpkg -i packages-microsoft-prod.deb
+  rm -f packages-microsoft-prod.deb
+  # Install PowerShell
+  apt-get update -y
+  if ! command -v pwsh &>/dev/null; then
+    echo "[INFO] Installing PowerShell …"
+    apt-get install -y powershell
+  else
+    echo "[INFO] PowerShell already present: $(pwsh -v)"
+  fi
 else
-  echo "[INFO] PowerShell already present: $(pwsh -v)"
+  # RHEL/CentOS/Rocky/AlmaLinux
+  if command -v dnf &>/dev/null || command -v yum &>/dev/null; then
+    echo "[INFO] Detecting RHEL-based distro: $NAME $VERSION_ID"
+    RHEL_MAJOR=${VERSION_ID%%.*}
+    if [ "$RHEL_MAJOR" -lt 8 ]; then majorver=7
+    elif [ "$RHEL_MAJOR" -lt 9 ]; then majorver=8
+    else majorver=9
+    fi
+    if ! rpm -q packages-microsoft-prod &>/dev/null; then
+      echo "[INFO] Adding Microsoft repo for RHEL $majorver …"
+      curl -fsSL -O "https://packages.microsoft.com/config/rhel/$majorver/packages-microsoft-prod.rpm"
+      rpm -i packages-microsoft-prod.rpm
+      rm -f packages-microsoft-prod.rpm
+    fi
+    # Install PowerShell
+    if command -v dnf &>/dev/null; then
+      dnf update -y && dnf install -y powershell
+    else
+      yum update -y && yum install -y powershell
+    fi
+  fi
 fi
 
 # ── fetch the latest ninja-universal.ps1 (cache-bust with time stamp) ──

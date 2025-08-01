@@ -45,4 +45,5 @@ curl -fsSL \
 
 # ── run the PowerShell script, forwarding any extra CLI args ────────────
 echo "[INFO] Launching ninja-universal.ps1 $*"
-pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File "$TMP_PS1" "$@"
+# Ensure interactive prompts work even when this script was piped via stdin
+pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File "$TMP_PS1" "$@" </dev/tty

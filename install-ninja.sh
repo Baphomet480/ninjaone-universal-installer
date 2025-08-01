@@ -20,14 +20,16 @@ source /etc/os-release
 if command -v apt-get &>/dev/null; then
   echo "[INFO] Detecting Debian/Ubuntu: $NAME $VERSION_ID"
   # Prerequisites
-  apt-get update -y
+  # Update package list (ignore any repository errors)
+  apt-get update -y || true
   apt-get install -y wget apt-transport-https software-properties-common
   # Import Microsoft repository keys
   wget -q https://packages.microsoft.com/config/ubuntu/${VERSION_ID}/packages-microsoft-prod.deb
   dpkg -i packages-microsoft-prod.deb
   rm -f packages-microsoft-prod.deb
   # Install PowerShell
-  apt-get update -y
+  # Refresh packages after registering MS repo (ignore any repository errors)
+  apt-get update -y || true
   if ! command -v pwsh &>/dev/null; then
     echo "[INFO] Installing PowerShell …"
     apt-get install -y powershell

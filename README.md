@@ -75,11 +75,18 @@ curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-insta
 
 You can also bootstrap and run the installer in one step with our new Bash wrapper:
 ```bash
+# Recommended: download and run to preserve interactive prompts
+curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh -o install-ninja.sh
+sudo bash install-ninja.sh -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+```
+
+Alternatively, you can pipe, but some shells or sudo configurations may suppress TTY prompts:
+```bash
 curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh \
   | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 
-> **Note:** You must enter a valid selection when prompted for Organization/Location. Leaving it blank will abort the installer.
+> **Note:** If the interactive menu does not appear when piping, download the script first and run it directly as shown above.
 
 ### Download and install automatically
 ```powershell

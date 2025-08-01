@@ -17,7 +17,7 @@ Runs unmodified on **Windows PowerShell 5.x** *and* **PowerShell 7+** on Ubuntu 
 
 ### Linux: bootstrap PowerShell & installer
 ```bash
-curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh \
+curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh?$(date +%s)" \
   | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 
@@ -82,7 +82,7 @@ sudo bash install-ninja.sh -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<C
 
 Alternatively, you can pipe, but some shells or sudo configurations may suppress TTY prompts:
 ```bash
-curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh \
+curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh?$(date +%s)" \
   | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 

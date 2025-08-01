@@ -1,6 +1,8 @@
 <#
 .SYNOPSIS
     Download and optionally install the latest NinjaOne agent.
+.VERSION
+    0.1.0
 .
 .DESCRIPTION
     - Authenticates to the NinjaOne Public API v2.
@@ -9,6 +11,8 @@
     - Optionally installs the agent (handles elevation, removes older versions).
     - Adds GUI/OpenGL libraries on Linux when needed.
 .
+.NOTES
+    Version: 0.1.0
 .PARAMETER Install
     Install the agent after downloading (default: download only).
 .

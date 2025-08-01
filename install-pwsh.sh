@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Version: 0.1.0
 #
 # install-pwsh.sh — install PowerShell on major Linux distributions
 # Usage: curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-pwsh.sh |

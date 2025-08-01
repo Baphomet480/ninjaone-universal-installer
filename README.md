@@ -1,4 +1,5 @@
 # NinjaOne Universal Installer
+**Version: 0.1.0 (Unreleased)**
 
 A single self-contained PowerShell script that:
 
@@ -12,15 +13,29 @@ Runs unmodified on **Windows PowerShell 5.x** *and* **PowerShell 7+** on Ubuntu 
 
 ---
 
-# Quick usage
+## Quick start
 
+### Linux: bootstrap PowerShell & installer
+```bash
+curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh \
+  | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+```
+
+### Windows PowerShell 7+: download & install
 ```powershell
-# Remove any local copy, download latest script, then install headless (PowerShell 7+)
-Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue; iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -Headers @{ 'Cache-Control'='no-cache' } -OutFile ninja-universal.ps1; pwsh -NoProfile -Command ".
-ninja-universal.ps1 -Install -ClientId '<client-id>' -ClientSecret '<secret>'"
+Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing \
+  -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile ninja-universal.ps1
+pwsh -NoProfile -Command ".\n+ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'"
+```
 
-# Or on Windows PowerShell 5.x (requires -UseBasicParsing)
-Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue; iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -Headers @{ 'Cache-Control'='no-cache' } -OutFile ninja-universal.ps1; .\ninja-universal.ps1 -Install -ClientId '<client-id>' -ClientSecret '<secret>' -Region us
+### Windows PowerShell 5.x
+```powershell
+# Fetch fresh copy with basic parsing (no modules in older PS)
+Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue
+iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -OutFile ninja-universal.ps1
+.
+ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>' -Region us
 ```
 
 ## Requirements

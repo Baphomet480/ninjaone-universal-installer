@@ -58,6 +58,12 @@ You can install PowerShell on popular Linux distributions using our helper scrip
 curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-pwsh.sh | sudo bash
 ```
 
+You can also bootstrap and run the installer in one step with our new Bash wrapper:
+```bash
+curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh \
+  | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+```
+
 ### Download and install automatically
 ```powershell
 .\ninja-universal.ps1 -Install -Region EU -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'

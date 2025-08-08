@@ -213,12 +213,47 @@ if ($Install) {
     }
     if ($IsWindows) {
         Write-Host "[INFO] Installing MSI…" -ForegroundColor Cyan
-        # Uninstall any existing NinjaOne MSI packages by matching agent installers
-        $installed = Get-CimInstance -ClassName Win32_Product | Where-Object Name -match 'ninja.*agent'
-        foreach ($pkg in $installed) {
-            Write-Host "[INFO] Removing existing MSI package: $($pkg.Name)" -ForegroundColor Cyan
-            msiexec /x $pkg.IdentifyingNumber /qn /norestart
+
+        function Remove-WindowsNinjaAgent {
+            # Prefer registry-based uninstall over Win32_Product to avoid MSI self-repair
+            $paths = @(
+                'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+            )
+            $entries = Get-ItemProperty -Path $paths -ErrorAction SilentlyContinue | Where-Object {
+                $_.DisplayName -and ($_.DisplayName -match 'ninja.*agent')
+            }
+            foreach ($e in $entries) {
+                try {
+                    $guid = $null
+                    if ($e.PSChildName -match '^\{[0-9A-Fa-f-]+\}$') { $guid = $e.PSChildName }
+                    elseif ($e.UninstallString -and ($e.UninstallString -match '\{[0-9A-Fa-f-]+\}')) { $guid = $Matches[0] }
+
+                    if ($guid) {
+                        Write-Host "[INFO] Uninstalling MSI $($e.DisplayName) $guid" -ForegroundColor Cyan
+                        Start-Process msiexec.exe -ArgumentList "/x $guid /qn /norestart" -Wait
+                    }
+                    elseif ($e.UninstallString) {
+                        # Fallback: invoke vendor uninstall string silently when possible
+                        $cmd = $e.UninstallString
+                        # Replace /I with /X when present
+                        $cmd = $cmd -replace '/I','/X'
+                        if ($cmd -notmatch '/qn') { $cmd += ' /qn /norestart' }
+                        Write-Verbose "Invoking uninstall string: $cmd"
+                        $exe, $args = $null, $null
+                        if ($cmd -match '^("?[^"]+"?)\s*(.*)$') { $exe = $Matches[1]; $args = $Matches[2] }
+                        if ($exe) { Start-Process $exe -ArgumentList $args -Wait }
+                    }
+                } catch { Write-Verbose "Uninstall entry failed: $($_.Exception.Message)" }
+            }
         }
+
+        # Stop services first, then remove, then install
+        foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
+            try { Stop-Service $svc -Force -ErrorAction SilentlyContinue } catch { Write-Verbose "Stop $svc: $($_.Exception.Message)" }
+        }
+        Remove-WindowsNinjaAgent
+
         # Install this MSI
         Start-Process msiexec -Wait -ArgumentList "/i `"$Out`" /qn /norestart"
         # Start the agent services if present
@@ -227,17 +262,27 @@ if ($Install) {
     }
     elseif ($IsLinux) {
         if ($InstallerType -eq 'LINUX_DEB') {
-            # Remove any existing NinjaOne Agent packages to avoid pre-inst constraint
-            # Purge any existing NinjaOne Agent packages to avoid pre-inst constraint
-            try { & dpkg --purge ninjaone-agent* } catch { Write-Verbose "dpkg purge skipped: $($_.Exception.Message)" }
-            try { & apt remove -y 'ninja*-agent*' } catch { Write-Verbose "apt remove skipped: $($_.Exception.Message)" }
-            if ($AddGuiLibs) {
-                apt update -y
-                apt install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
+            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
+                try { & systemctl stop $svc 2> $null } catch { Write-Verbose "stop $svc: $($_.Exception.Message)" }
             }
-            apt install -y "$Out"
+            try {
+                # Remove any existing packages matching ninja*agent*
+                & apt-get remove -y 'ninja*-agent*' 'ninjaone-agent*' 'ninjarmm-agent*' 2> $null
+                & dpkg --purge ninjaone-agent* 2> $null
+            } catch { Write-Verbose "apt/dpkg removal skipped: $($_.Exception.Message)" }
+            if ($AddGuiLibs) {
+                apt-get update -y || $true
+                apt-get install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
+            }
+            apt-get install -y "$Out"
         } else {
-            dnf remove -y ninjarmm-agent 2>/dev/null
+            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
+                try { & systemctl stop $svc 2> $null } catch { Write-Verbose "stop $svc: $($_.Exception.Message)" }
+            }
+            try {
+                $rpmPkgs = (& rpm -qa 2> $null | Where-Object { $_ -match 'ninja.*agent' })
+                if ($rpmPkgs) { dnf remove -y $rpmPkgs }
+            } catch { Write-Verbose "dnf removal skipped: $($_.Exception.Message)" }
             if ($AddGuiLibs) {
                 dnf install -y mesa-libGL mesa-libEGL libX11 libxkbcommon libxkbcommon-x11
             }

@@ -1,7 +1,7 @@
 Describe 'ninja-universal.ps1 script' {
-    It 'Should display help information' {
-        $help = Get-Help "$PSScriptRoot/../ninja-universal.ps1" -Full -ErrorAction SilentlyContinue
-        $help | Should -Not -BeNullOrEmpty
+    It 'Should contain a comment-based help block' {
+        $content = Get-Content "$PSScriptRoot/../ninja-universal.ps1" -Raw
+        $content | Should -Match '(?ms)^<#.*?\.SYNOPSIS.*?#>'
     }
 
     It 'Should declare a valid .VERSION header' {

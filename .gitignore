@@ -1,1 +1,29 @@
 testResults.xml
+# Test artifacts
+TestResults/
+
+# Coverage reports
+coverage/
+.coverage
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs & temp files
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.ps1~
+
+# Env files (do not commit secrets)
+.env
+.env.*
+!.env.example

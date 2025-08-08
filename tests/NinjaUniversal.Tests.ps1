@@ -4,8 +4,10 @@ Describe 'ninja-universal.ps1 script' {
         $help | Should -Not -BeNullOrEmpty
     }
 
-    It 'Should include Version: 0.1.0 in the script file header' {
-        $scriptText = Get-Content "$PSScriptRoot/../ninja-universal.ps1"
-        ($scriptText -join "`n") | Should -Match 'Version: 0\.1\.0'
+    It 'Should declare a valid .VERSION header' {
+        $content = Get-Content "$PSScriptRoot/../ninja-universal.ps1" -Raw
+        $m = [regex]::Match($content, '(?m)^\s*\.VERSION\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$')
+        $m.Success | Should -BeTrue
+        $m.Groups[1].Value | Should -Match '^[0-9]+\.[0-9]+\.[0-9]+$'
     }
 }

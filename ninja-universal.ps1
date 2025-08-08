@@ -12,7 +12,7 @@
     - Adds GUI/OpenGL libraries on Linux when needed.
 .
 .NOTES
-    Version: 0.1.4
+    Version: 0.1.0
 .PARAMETER Install
     Install the agent after downloading (default: download only).
 .
@@ -214,7 +214,7 @@ if ($Install) {
     if ($IsWindows) {
         Write-Host "[INFO] Installing MSI…" -ForegroundColor Cyan
         # Uninstall any existing NinjaOne MSI packages by matching agent installers
-        $installed = Get-WmiObject -Class Win32_Product | Where-Object Name -match 'ninja.*agent'
+        $installed = Get-CimInstance -ClassName Win32_Product | Where-Object Name -match 'ninja.*agent'
         foreach ($pkg in $installed) {
             Write-Host "[INFO] Removing existing MSI package: $($pkg.Name)" -ForegroundColor Cyan
             msiexec /x $pkg.IdentifyingNumber /qn /norestart
@@ -229,8 +229,8 @@ if ($Install) {
         if ($InstallerType -eq 'LINUX_DEB') {
             # Remove any existing NinjaOne Agent packages to avoid pre-inst constraint
             # Purge any existing NinjaOne Agent packages to avoid pre-inst constraint
-            try { & dpkg --purge ninjaone-agent* } catch {}
-            try { & apt remove -y 'ninja*-agent*' } catch {}
+            try { & dpkg --purge ninjaone-agent* } catch { Write-Verbose "dpkg purge skipped: $($_.Exception.Message)" }
+            try { & apt remove -y 'ninja*-agent*' } catch { Write-Verbose "apt remove skipped: $($_.Exception.Message)" }
             if ($AddGuiLibs) {
                 apt update -y
                 apt install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
@@ -245,7 +245,7 @@ if ($Install) {
         }
         systemctl daemon-reload
         foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
-            if (systemctl cat $svc 2>$null) { systemctl enable --now $svc }
+            if (systemctl cat $svc 2> $null) { systemctl enable --now $svc }
         }
     }
     Write-Host "`n[OK] Agent installed and running." -ForegroundColor Green

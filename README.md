@@ -71,6 +71,15 @@ To use this script, you must supply a NinjaOne API Client Id and Client Secret.
   -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
+### Headless or SSH (device code auth)
+```powershell
+# No local browser? Use device code.
+.\ninja-universal.ps1 -Install -UseDeviceCode
+```
+Notes:
+- Prints a verification URL and code to enter on another device.
+- If the installed NinjaOne PowerShell module doesn’t support device code yet, the script prompts you to use client credentials instead.
+
 ## Installing PowerShell on Linux
 
 You can install PowerShell on popular Linux distributions using our helper script:
@@ -207,6 +216,7 @@ ninja-universal.ps1 -Region NA -Install
 | `-Organization` | Organization Id or Name (skips interactive pick)                  |         |
 | `-Location`     | Location Id or Name (skips interactive pick)                      |         |
 | `-NonInteractive`| Fail instead of prompting when selection is ambiguous             | `false` |
+| `-UseDeviceCode` | Force device code auth; auto-used when no GUI is available        | `false` |
 
 ## Troubleshooting
 
@@ -220,6 +230,12 @@ ninja-universal.ps1 -Region NA -Install
 - If you get an "insufficient_privileges" error at connect, ensure your client credentials
   have both `management` and `monitoring` scopes granted (or use `-UseWebAuth`/`-UseTokenAuth`
   for delegated flows if client-only access lacks permissions).
+- Device code not supported: check whether your installed NinjaOne module exposes a device-code parameter on `Connect-NinjaOne`. Example:
+  ```powershell
+  (Get-Command Connect-NinjaOne).Parameters.Keys | Where-Object { $_ -match 'Device|UseDevice' }
+  ```
+  If none found, either install a newer module version or provide `-ClientId`/`-ClientSecret`.
+- Web auth won’t open in headless sessions: use `-UseDeviceCode` or pass client credentials.
 ```powershell
 # Check module parameters
 Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters

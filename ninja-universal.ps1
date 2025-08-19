@@ -173,78 +173,21 @@ if ($PSVersionTable.PSVersion.Major -lt 6) {
     [Net.ServicePointManager]::SecurityProtocol = 3072
 }
 
+# Prefer local module during refactor; fall back to Global NinjaOne
+$localModule = Join-Path $PSScriptRoot 'src/NinjaUniversal/NinjaUniversal.psd1'
+if (Test-Path $localModule) { Import-Module $localModule -Force }
 Install-RequiredModule PowerShellGet
 Install-RequiredModule NinjaOne
 Import-Module  NinjaOne
 
-# ── Credential precedence: CLI > ENV; fallback to interactive web auth ─
+# ── Credential precedence + auth via module ───────────────────────────
 $CID = if ($ClientId) { $ClientId } elseif ($Env:NINJA_CLIENT_ID) { $Env:NINJA_CLIENT_ID } else { '' }
 $CSC = if ($ClientSecret) { $ClientSecret } elseif ($Env:NINJA_CLIENT_SECRET) { $Env:NINJA_CLIENT_SECRET } else { '' }
+Get-NinjaAuth -Region $Region -ClientId $CID -ClientSecret $CSC -NonInteractive:$NonInteractive | Out-Null
 
-# Allow "NA" (North America) as an alias for the default "US" cloud
-$Region = if ($Region.ToUpper() -eq 'NA') { 'US' } else { $Region }
-
-# Connect to NinjaOne API (prefer client creds; else interactive when allowed)
-if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
-    throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
-}
-if ($CID -and $CSC) {
-    Connect-NinjaOne -ClientId $CID -ClientSecret $CSC -Instance $Region.ToLower() -Scopes management,monitoring -UseClientAuth
-}
-else {
-    if ($NonInteractive) {
-        throw "Missing credentials. Provide -ClientId/-ClientSecret or set NINJA_CLIENT_ID/NINJA_CLIENT_SECRET."
-    }
-    Write-Information "[INFO] No client credentials found. Launching interactive login…" -InformationAction Continue
-    try {
-        Connect-NinjaOne -Instance $Region.ToLower() -Scopes management,monitoring -UseWebAuth
-    } catch {
-        throw "Interactive login failed or not supported. Provide -ClientId/-ClientSecret or set NINJA_CLIENT_ID/NINJA_CLIENT_SECRET. Error: $($_.Exception.Message)"
-    }
-}
-
-# ── choose Org & Location ─────────────────────────────────────────────
-function Resolve-ByNameOrId {
-    param(
-        [Parameter(Mandatory)][array]$Items,
-        [Parameter(Mandatory)][string]$Value
-    )
-    $match = $Items | Where-Object { $_.Id -eq $Value -or $_.id -eq $Value -or $_.Name -eq $Value -or $_.name -eq $Value }
-    if (-not $match) {
-        $match = $Items | Where-Object { $_.Name -like "*$Value*" -or $_.name -like "*$Value*" }
-    }
-    return $match
-}
-
-$orgs = Get-NinjaOneOrganizations | Sort-Object Name
-if ($Organization) {
-    $candidates = Resolve-ByNameOrId -Items $orgs -Value $Organization
-    if (-not $candidates) { throw "Organization '$Organization' not found." }
-    if ($candidates.Count -gt 1) {
-        if ($NonInteractive) { throw "Multiple organizations matched '$Organization'. Be more specific." }
-        $org = Select-FromList -Prompt "Select organisation" -Items $candidates
-    } else { $org = $candidates[0] }
-} elseif ($orgs.Count -eq 1) {
-    $org = $orgs[0]
-} else {
-    if ($NonInteractive) { throw "Multiple organizations found. Provide -Organization to avoid prompts." }
-    $org = Select-FromList -Prompt "Select organisation" -Items $orgs
-}
-
-$locs = Get-NinjaOneLocations -organisationId $org.Id | Sort-Object Name
-if ($Location) {
-    $lc = Resolve-ByNameOrId -Items $locs -Value $Location
-    if (-not $lc) { throw "Location '$Location' not found in '$($org.Name)'." }
-    if ($lc.Count -gt 1) {
-        if ($NonInteractive) { throw "Multiple locations matched '$Location'. Be more specific." }
-        $loc = Select-FromList -Prompt "Select location" -Items $lc
-    } else { $loc = $lc[0] }
-} elseif ($locs.Count -eq 1) {
-    $loc = $locs[0]
-} else {
-    if ($NonInteractive) { throw "Multiple locations found. Provide -Location to avoid prompts." }
-    $loc = Select-FromList -Prompt "Select location" -Items $locs
-}
+# ── choose Org & Location via module ──────────────────────────────────
+$org = Select-NinjaOrganization -Organization $Organization -NonInteractive:$NonInteractive
+$loc = Select-NinjaLocation -Organization $org -Location $Location -NonInteractive:$NonInteractive
 
 # ── pick auto installer type if omitted ───────────────────────────────
 if (-not $InstallerType) {
@@ -264,13 +207,11 @@ else {
 }
 }
 
-# ── Generate installer URL & download ─────────────────────────────────
-$link = Get-NinjaOneInstaller -organisationId $org.id -locationId $loc.id -installerType $InstallerType
-$ext  = ($InstallerType -split '_')[-1].ToLower()
-$Out  = Join-Path ([IO.Path]::GetTempPath()) "ninja.$ext"
-
-Write-Information "[INFO] Downloading → $Out …" -InformationAction Continue
-Invoke-WebRequest $link.url -UseBasicParsing -Headers @{ 'User-Agent' = 'Mozilla/5.0' } -OutFile $Out
+# ── Generate installer URL & download/install via module ──────────────
+$lnk = Get-NinjaInstallerLink -Organization $org -Location $loc -InstallerType $InstallerType
+$InstallerType = $lnk.Type
+$res = Invoke-NinjaInstall -Url $lnk.Url -Type $InstallerType -AddGuiLibs:$AddGuiLibs
+$Out = $res.Out
 
 # ── Decide if GUI libs needed on Linux─────────────────────────────────
 function Test-GuiPresent {
@@ -290,93 +231,7 @@ if ($Install) {
     if ($IsLinux -and ((whoami) -ne 'root')) {
         Write-Warning "Not running as root; package installation may fail. Consider re-running under sudo."
     }
-    if ($IsWindows) {
-        Write-Information "[INFO] Installing MSI…" -InformationAction Continue
-
-        function Remove-WindowsNinjaAgent {
-            [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
-            param()
-            # Prefer registry-based uninstall over Win32_Product to avoid MSI self-repair
-            $paths = @(
-                'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
-                'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
-            )
-            $entries = Get-ItemProperty -Path $paths -ErrorAction SilentlyContinue | Where-Object {
-                $_.DisplayName -and ($_.DisplayName -match 'ninja.*agent')
-            }
-            foreach ($e in $entries) {
-                try {
-                    $guid = $null
-                    if ($e.PSChildName -match '^\{[0-9A-Fa-f-]+\}$') { $guid = $e.PSChildName }
-                    elseif ($e.UninstallString -and ($e.UninstallString -match '\{[0-9A-Fa-f-]+\}')) { $guid = $Matches[0] }
-
-                    if ($guid) {
-                        if ($PSCmdlet.ShouldProcess("$($e.DisplayName) $guid", 'Uninstall')) {
-                            Write-Information "[INFO] Uninstalling MSI $($e.DisplayName) $guid" -InformationAction Continue
-                            Start-Process msiexec.exe -ArgumentList "/x $guid /qn /norestart" -Wait
-                        }
-                    }
-                    elseif ($e.UninstallString) {
-                        # Fallback: invoke vendor uninstall string silently when possible
-                        $cmd = $e.UninstallString
-                        # Replace /I with /X when present
-                        $cmd = $cmd -replace '/I','/X'
-                        if ($cmd -notmatch '/qn') { $cmd += ' /qn /norestart' }
-                        Write-Verbose "Invoking uninstall string: $cmd"
-                        $exePath, $exeArgs = $null, $null
-                        if ($cmd -match '^("?[^"]+"?)\s*(.*)$') { $exePath = $Matches[1]; $exeArgs = $Matches[2] }
-                        if ($exePath -and $PSCmdlet.ShouldProcess($exePath, 'Uninstall via vendor string')) { Start-Process $exePath -ArgumentList $exeArgs -Wait }
-                    }
-                } catch { Write-Verbose "Uninstall entry failed: $($_.Exception.Message)" }
-            }
-        }
-
-        # Stop services first, then remove, then install
-        foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
-            try { Stop-Service $svc -Force -ErrorAction SilentlyContinue } catch { Write-Verbose "Stop $($svc): $($_.Exception.Message)" }
-        }
-        Remove-WindowsNinjaAgent
-
-        # Install this MSI
-        Start-Process msiexec -Wait -ArgumentList "/i `"$Out`" /qn /norestart"
-        # Start the agent services if present
-        Start-Service ninjarmm-agent -ErrorAction SilentlyContinue
-        Start-Service ninjaone-agent -ErrorAction SilentlyContinue
-    }
-    elseif ($IsLinux) {
-        if ($InstallerType -eq 'LINUX_DEB') {
-            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
-                try { & systemctl stop $svc 2>$null } catch { Write-Verbose "stop $($svc): $($_.Exception.Message)" }
-            }
-            try {
-                # Remove any existing packages matching ninja*agent*
-                & apt-get remove -y 'ninja*-agent*' 'ninjaone-agent*' 'ninjarmm-agent*' 2>$null
-                & dpkg --purge ninjaone-agent* 2>$null
-            } catch { Write-Verbose "apt/dpkg removal skipped: $($_.Exception.Message)" }
-            if ($AddGuiLibs) {
-                apt-get update -y || $true
-                apt-get install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
-            }
-            apt-get install -y "$Out"
-        } else {
-            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
-                try { & systemctl stop $svc 2>$null } catch { Write-Verbose "stop $($svc): $($_.Exception.Message)" }
-            }
-            try {
-                $rpmPkgs = (& rpm -qa 2>$null | Where-Object { $_ -match 'ninja.*agent' })
-                if ($rpmPkgs) { dnf remove -y $rpmPkgs }
-            } catch { Write-Verbose "dnf removal skipped: $($_.Exception.Message)" }
-            if ($AddGuiLibs) {
-                dnf install -y mesa-libGL mesa-libEGL libX11 libxkbcommon libxkbcommon-x11
-            }
-            dnf install -y "$Out"
-        }
-        systemctl daemon-reload
-        foreach ($svc in 'ninjarmm-agent','ninjaone-agent') {
-            $null = & systemctl cat $svc 2>$null
-            if ($LASTEXITCODE -eq 0) { & systemctl enable --now $svc }
-        }
-    }
+    # Module performed install already; nothing else to do here
     Write-Information "`n[OK] Agent installed and running." -InformationAction Continue
 }
 

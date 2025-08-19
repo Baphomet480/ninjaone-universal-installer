@@ -1,5 +1,5 @@
 # NinjaOne Universal Installer
-**Version: 0.1.0 (Unreleased)**
+**Version: 0.2.0**
 
 A single self-contained PowerShell script that:
 
@@ -26,7 +26,7 @@ curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-inst
 Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue
 iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing \
   -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile ninja-universal.ps1
-pwsh -NoProfile -Command ".\n+ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'"
+pwsh -NoProfile -Command ".\nninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'"
 ```
 
 ### Windows PowerShell 5.x
@@ -63,6 +63,12 @@ To use this script, you must supply a NinjaOne API Client Id and Client Secret.
 ### Download only (interactive)
 ```powershell
 .\ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
+```
+
+### Download and install (non-interactive)
+```powershell
+.\ninja-universal.ps1 -Install -Organization 'Acme Co' -Location 'HQ' -NonInteractive `
+  -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
 ## Installing PowerShell on Linux
@@ -182,7 +188,8 @@ $Env:NINJA_CLIENT_ID     = 'YOUR_ID'; $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
 iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
     -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }).Content;
 # Then invoke the installer against the US region:
-.\n+ninja-universal.ps1 -Region NA -Install
+.\
+ninja-universal.ps1 -Region NA -Install
 ```
 
 
@@ -197,6 +204,9 @@ iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-instal
 | `-InstallerType`| Installer type (`WINDOWS_MSI`,`LINUX_DEB`,`LINUX_RPM`,`MAC_PKG`)    | auto    |
 | `-ClientId`     | NinjaOne API client Id                                             |         |
 | `-ClientSecret` | NinjaOne API client secret                                         |         |
+| `-Organization` | Organization Id or Name (skips interactive pick)                  |         |
+| `-Location`     | Location Id or Name (skips interactive pick)                      |         |
+| `-NonInteractive`| Fail instead of prompting when selection is ambiguous             | `false` |
 
 ## Troubleshooting
 

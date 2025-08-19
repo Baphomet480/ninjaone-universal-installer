@@ -66,6 +66,7 @@ param (
     [string]$InstallerType,
     [string]$ClientId,
     [string]$ClientSecret,
+    [switch]$UseDeviceCode,
     [string]$Organization,
     [string]$Location,
     [switch]$NonInteractive
@@ -183,7 +184,7 @@ Import-Module  NinjaOne
 # ── Credential precedence + auth via module ───────────────────────────
 $CID = if ($ClientId) { $ClientId } elseif ($Env:NINJA_CLIENT_ID) { $Env:NINJA_CLIENT_ID } else { '' }
 $CSC = if ($ClientSecret) { $ClientSecret } elseif ($Env:NINJA_CLIENT_SECRET) { $Env:NINJA_CLIENT_SECRET } else { '' }
-Get-NinjaAuth -Region $Region -ClientId $CID -ClientSecret $CSC -NonInteractive:$NonInteractive | Out-Null
+Get-NinjaAuth -Region $Region -ClientId $CID -ClientSecret $CSC -NonInteractive:$NonInteractive -UseDeviceCode:$UseDeviceCode | Out-Null
 
 # ── choose Org & Location via module ──────────────────────────────────
 $org = Select-NinjaOrganization -Organization $Organization -NonInteractive:$NonInteractive

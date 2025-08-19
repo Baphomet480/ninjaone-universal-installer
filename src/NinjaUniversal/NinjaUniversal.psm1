@@ -29,12 +29,14 @@ function Start-Elevation {
 
 function Get-NinjaAuth {
     [CmdletBinding()]
+    [OutputType([hashtable])]
     param(
         [ValidateSet('US','US2','CA','EU','OC','NA')]
         [string]$Region = 'US',
         [string]$ClientId,
         [string]$ClientSecret,
-        [switch]$NonInteractive
+        [switch]$NonInteractive,
+        [switch]$UseDeviceCode
     )
     $Region = if ($Region.ToUpper() -eq 'NA') { 'US' } else { $Region }
     if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
@@ -45,6 +47,34 @@ function Get-NinjaAuth {
         return @{ Mode='Client'; Region=$Region }
     }
     if ($NonInteractive) { throw "Missing credentials in non-interactive mode." }
+
+    # Determine if a local browser/UI is likely available
+    $uiAvailable = $false
+    try {
+        if ($IsLinux) {
+            $uiAvailable = [bool]($Env:DISPLAY -or $Env:WAYLAND_DISPLAY)
+        } elseif ($IsWindows -or $IsMacOS) {
+            $uiAvailable = [Environment]::UserInteractive
+        }
+    } catch { $uiAvailable = $false }
+
+    $shouldUseDevice = $UseDeviceCode -or (-not $uiAvailable)
+    if ($shouldUseDevice) {
+        $cmd = Get-Command Connect-NinjaOne
+        $paramName = @('UseDeviceCode','UseDeviceAuth','DeviceCode') | Where-Object { $cmd.Parameters.ContainsKey($_) } | Select-Object -First 1
+        if ($paramName) {
+            Write-Information "[INFO] Starting device code authentication…" -InformationAction Continue
+            $splat = @{ Instance = $Region.ToLower(); Scopes = 'management,monitoring' }
+            $splat[$paramName] = $true
+            Connect-NinjaOne @splat | Out-Null
+            return @{ Mode='DeviceCode'; Region=$Region }
+        }
+        if (-not $uiAvailable) {
+            throw "Device code auth not supported by current NinjaOne module and no browser UI available. Use -ClientId/-ClientSecret instead."
+        }
+        # fall through to web auth
+    }
+
     Write-Information "[INFO] Launching interactive NinjaOne login…" -InformationAction Continue
     Connect-NinjaOne -Instance $Region.ToLower() -Scopes management,monitoring -UseWebAuth | Out-Null
     return @{ Mode='Interactive'; Region=$Region }
@@ -141,7 +171,7 @@ function Remove-NinjaAgent {
                         Start-Process msiexec.exe -ArgumentList "/x $guid /qn /norestart" -Wait
                     }
                 }
-            } catch {}
+            } catch { Write-Verbose "Uninstall probe failed: $($_.Exception.Message)" }
         }
         return
     }
@@ -160,6 +190,7 @@ function Remove-NinjaAgent {
 
 function Invoke-NinjaInstall {
     [CmdletBinding()]
+    [OutputType([hashtable])]
     param(
         [Parameter(Mandatory)][string]$Url,
         [Parameter(Mandatory)][string]$Type,
@@ -169,18 +200,18 @@ function Invoke-NinjaInstall {
     $out = Join-Path ([IO.Path]::GetTempPath()) "ninja.$ext"
     Invoke-WebRequest $Url -UseBasicParsing -Headers @{ 'User-Agent'='Mozilla/5.0' } -OutFile $out
     if ($IsWindows) {
-        foreach ($svc in 'ninjarmm-agent','ninjaone-agent') { try { Stop-Service $svc -Force -EA SilentlyContinue } catch {} }
+        foreach ($svc in 'ninjarmm-agent','ninjaone-agent') { try { Stop-Service $svc -Force -EA SilentlyContinue } catch { Write-Verbose "Stop $svc failed: $($_.Exception.Message)" } }
         Remove-NinjaAgent -Confirm:$false
         Start-Process msiexec -Wait -ArgumentList "/i `"$out`" /qn /norestart"
         Start-Service ninjarmm-agent -EA SilentlyContinue; Start-Service ninjaone-agent -EA SilentlyContinue
     } elseif ($IsLinux) {
         if ($Type -eq 'LINUX_DEB') {
-            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') { try { & systemctl stop $svc 2>$null } catch {} }
+            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') { try { & systemctl stop $svc 2>$null } catch { Write-Verbose "stop $svc failed: $($_.Exception.Message)" } }
             if ($AddGuiLibs) { apt-get update -y || $true; apt-get install -y libgl1 libegl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0 }
             apt-get install -y "$out"
         } else {
-            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') { try { & systemctl stop $svc 2>$null } catch {} }
-            if ($AddGuiLibs) { dnf install -y mesa-libGL mesa-libEGL libX11 libxkbcommon libxkbcommon-x1 }
+            foreach ($svc in 'ninjarmm-agent','ninjaone-agent') { try { & systemctl stop $svc 2>$null } catch { Write-Verbose "stop $svc failed: $($_.Exception.Message)" } }
+            if ($AddGuiLibs) { dnf install -y mesa-libGL mesa-libEGL libX11 libxkbcommon libxkbcommon-x11 }
             dnf install -y "$out"
         }
         systemctl daemon-reload
@@ -190,4 +221,3 @@ function Invoke-NinjaInstall {
 }
 
 Export-ModuleMember -Function *
-

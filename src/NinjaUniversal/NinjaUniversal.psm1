@@ -1,4 +1,4 @@
-Set-StrictMode -Version Latest
+﻿Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Install-RequiredModule {
@@ -221,3 +221,4 @@ function Invoke-NinjaInstall {
 }
 
 Export-ModuleMember -Function *
+

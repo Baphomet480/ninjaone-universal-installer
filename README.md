@@ -1,288 +1,142 @@
 # NinjaOne Universal Installer
 **Version: 0.2.0**
 
-A single self-contained PowerShell script that:
+A single, self-contained PowerShell script that:
 
-* Authenticates to the NinjaOne Public API v2  
-* Lets you choose Organisation → Location interactively  
-* Downloads the freshest agent build for that location  
-* Optionally installs the agent (handles elevation, removes older versions)  
-* Adds GUI / OpenGL libraries on Linux workstations only when needed  
+- Authenticates to the NinjaOne Public API v2
+- Lets you pick Organization → Location interactively
+- Downloads the latest agent build for that location
+- Optionally installs the agent (handles elevation, removes older versions)
+- Adds GUI/OpenGL libraries on Linux workstations when needed
 
-Runs unmodified on **Windows PowerShell 5.x** *and* **PowerShell 7+** on Ubuntu 22/24, Rocky Linux 9, or any other distro with `pwsh`.
+Runs on Windows PowerShell 5.x and PowerShell 7+ across Windows, Ubuntu, Rocky/Alma, macOS (with `pwsh`).
 
 ---
 
-## Quick start
+## Quick Start
 
-### Linux: bootstrap PowerShell & installer
+### Linux/macOS (recommended)
+Download the wrapper (preserves interactive prompts) and run:
 ```bash
-curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh?$(date +%s)" \
-  | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh -o install-ninja.sh
+sudo bash install-ninja.sh -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 
-### Windows PowerShell 7+: download & install
-```powershell
-Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing \
-  -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile ninja-universal.ps1
-pwsh -NoProfile -Command ".\nninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'"
+One-liner (convenient; some sudo/TTY setups limit prompts):
+```bash
+curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh?$(date +%s)" | \
+  sudo bash -s -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 
-### Windows PowerShell 5.x
+### Windows (PowerShell 5.x or 7+)
+Download the script (no-cache) and run:
 ```powershell
-# Fetch fresh copy with basic parsing (no modules in older PS)
-Remove-Item ./ninja-universal.ps1 -ErrorAction SilentlyContinue
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -OutFile ninja-universal.ps1
+Remove-Item .\ninja-universal.ps1 -ErrorAction SilentlyContinue
+Invoke-WebRequest https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
+  -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile ninja-universal.ps1
 .
-ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>' -Region us
+ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
+
+---
 
 ## Requirements
-
-- PowerShell 5.x on Windows or PowerShell 7+ (`pwsh`) on supported Linux distributions.
+- Windows PowerShell 5.x or PowerShell 7+ (`pwsh`).
 - Internet access to the NinjaOne API and OS package repositories.
 
-## Obtaining API credentials
-
-To use this script, you must supply a NinjaOne API Client Id and Client Secret.
-
-1. Log in to the NinjaOne administrator portal.
-2. Navigate to **Settings** → **API** → **API Clients**.
-3. Click **Add Client**, provide a name, and save.
-4. Copy the **Client Id** and **Client Secret** values.
-5. (Optional) You can also set environment variables:
-
+## Obtain API Credentials
+1. In NinjaOne, go to Settings → API → API Clients.
+2. Add a client and copy the Client Id and Client Secret.
+3. Optional: set env vars for convenience:
    ```powershell
    $Env:NINJA_CLIENT_ID     = 'your-client-id'
    $Env:NINJA_CLIENT_SECRET = 'your-client-secret'
    ```
 
-## Detailed Usage
+---
+
+## Advanced Usage
 
 ### Download only (interactive)
 ```powershell
-.\ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
+./ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
 ### Download and install (non-interactive)
 ```powershell
-.\ninja-universal.ps1 -Install -Organization 'Acme Co' -Location 'HQ' -NonInteractive `
+./ninja-universal.ps1 -Install -Organization 'Acme Co' -Location 'HQ' -NonInteractive `
   -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
 ### Headless or SSH (device code auth)
 ```powershell
-# No local browser? Use device code.
-.\ninja-universal.ps1 -Install -UseDeviceCode
+./ninja-universal.ps1 -Install -UseDeviceCode
 ```
 Notes:
 - Prints a verification URL and code to enter on another device.
-- If the installed NinjaOne PowerShell module doesn’t support device code yet, the script prompts you to use client credentials instead.
+- If the installed NinjaOne module lacks device-code support, use client credentials instead.
 
-## Installing PowerShell on Linux
-
-You can install PowerShell on popular Linux distributions using our helper script:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-pwsh.sh | sudo bash
-```
-
-You can also bootstrap and run the installer in one step with our new Bash wrapper:
-```bash
-# Recommended: download and run to preserve interactive prompts
-curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh -o install-ninja.sh
-sudo bash install-ninja.sh -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
-```
-
-Alternatively, you can pipe, but some shells or sudo configurations may suppress TTY prompts:
-```bash
-curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh?$(date +%s)" \
-  | sudo bash -- -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
-```
-
-> **Note:** If the interactive menu does not appear when piping, download the script first and run it directly as shown above.
-
-### Download and install automatically
-```powershell
-.\ninja-universal.ps1 -Install -Region EU -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
-```
-
-### Running on Windows PowerShell 5.x
-
-To always fetch the latest script (avoiding cached or stale copies) and run on PowerShell 5.x:
-```powershell
-# Cleanup any old script
-Remove-Item ninja-universal.ps1 -ErrorAction SilentlyContinue
-
-# Download the fresh script (basic parsing for PS5)
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
-    -UseBasicParsing -OutFile ninja-universal.ps1
-
-# Run the installer with your API credentials
-.\
-ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
-```
-
-#### Cache‑busting (if behind a proxy/CDN)
-
-If you encounter caching issues, you can force a fresh download in two ways:
-
-1. **Timestamp query**
-```powershell
-$ts = Get-Date -UFormat %s
-iwr "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1?t=$ts" `
-    -UseBasicParsing | iex
-```
-
-2. **No-cache header** (PowerShell 5.x)
-```powershell
-# Remove any old script
-Remove-Item ninja-universal.ps1 -ErrorAction SilentlyContinue
-
-# Download fresh copy with no-cache header
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
-    -UseBasicParsing `
-    -Headers @{ 'Cache-Control' = 'no-cache' } `
-    -OutFile ninja-universal.ps1
-
-# Run with your API credentials
-.\
-ninja-universal.ps1 -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
-```
-
-Or with **curl** in Bash/sh (pipe directly to PowerShell):
+### Direct pipe to PowerShell (optional)
+Linux/macOS:
 ```bash
 curl -H 'Cache-Control: no-cache' -sSL \
   https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 | \
-  pwsh -c - -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
-```
-
-#### One‑liner on Windows
-
-If you really need a single line in a Windows PowerShell prompt (no intermediate file), you can download to a temp file and immediately invoke it:
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "
-    $t = [IO.Path]::Combine([IO.Path]::GetTempPath(), 'ninja-universal.ps1');
-    Invoke-WebRequest 'https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1' \
-        -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile $t;
-    & $t -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET' -Install
-"
-```
-
-### Sample: Persisted env vars + download + run (Windows PowerShell)
-
-Below is an example PowerShell session that sets environment variables for your NinjaOne API credentials, downloads the script, and runs the installer using those vars:
-```powershell
-# Persist credentials for current session (or use SetX for permanent)
-$Env:NINJA_CLIENT_ID     = 'YOUR_ID'
-$Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-
-# Download latest script
-Remove-Item ninja-universal.ps1 -ErrorAction SilentlyContinue
-iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
-    -UseBasicParsing -OutFile ninja-universal.ps1
-
-# Run installer (uses env vars, default region NA)
-.
-ninja-universal.ps1 -Region NA -Install
-```
-
-### One‑liner with env vars and no-cache (Windows PowerShell)
-
-Make sure you set your NinjaOne API credentials **before** invoking the installer.
-To set your API creds, bypass cache, and run in one pipe without printing the script text, use:
-```powershell
-$Env:NINJA_CLIENT_ID     = 'YOUR_ID'; $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-iex (iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 \
-    -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }).Content;
-# Then invoke the installer against the US region:
-.\
-ninja-universal.ps1 -Region NA -Install
-```
-
-
-## Parameters
-
-| Parameter       | Description                                                        | Default |
-| --------------- | ------------------------------------------------------------------ | ------- |
-| `-Install`      | Install the agent after downloading (default: install)             | `true`  |
-| `-Gui`          | Force-install GUI libraries on Linux                               | auto    |
-| `-NoGui`        | Force-skip GUI libraries on Linux                                  | auto    |
-| `-Region`       | Tenant region/instance (`US`, `US2`, `CA`, `EU`, `OC`, `NA`)     | `US`    |
-| `-InstallerType`| Installer type (`WINDOWS_MSI`,`LINUX_DEB`,`LINUX_RPM`,`MAC_PKG`)    | auto    |
-| `-ClientId`     | NinjaOne API client Id                                             |         |
-| `-ClientSecret` | NinjaOne API client secret                                         |         |
-| `-Organization` | Organization Id or Name (skips interactive pick)                  |         |
-| `-Location`     | Location Id or Name (skips interactive pick)                      |         |
-| `-NonInteractive`| Fail instead of prompting when selection is ambiguous             | `false` |
-| `-UseDeviceCode` | Force device code auth; auto-used when no GUI is available        | `false` |
-
-## Troubleshooting
-
-- On Windows PowerShell 5.x, you may need TLS 1.2 support:
-  ```powershell
-  [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
-  ```
--- If GUI libraries fail on Linux, retry with `-NoGui` to skip GUI dependencies.
-- If you see "No organisations found.", first check your console scrollback for the printed org list (it appears above the prompt). \
-  If truly empty, verify your API credentials and region/instance:
-- If you get an "insufficient_privileges" error at connect, ensure your client credentials
-  have both `management` and `monitoring` scopes granted (or use `-UseWebAuth`/`-UseTokenAuth`
-  for delegated flows if client-only access lacks permissions).
-- Device code not supported: check whether your installed NinjaOne module exposes a device-code parameter on `Connect-NinjaOne`. Example:
-  ```powershell
-  (Get-Command Connect-NinjaOne).Parameters.Keys | Where-Object { $_ -match 'Device|UseDevice' }
-  ```
-  If none found, either install a newer module version or provide `-ClientId`/`-ClientSecret`.
-- Web auth won’t open in headless sessions: use `-UseDeviceCode` or pass client credentials.
-```powershell
-# Check module parameters
-Get-Command Connect-NinjaOne | Select-Object -ExpandProperty Parameters
-
-# Simple manual connect using client credentials splat
- $Env:NINJA_CLIENT_ID     = 'YOUR_ID'
- $Env:NINJA_CLIENT_SECRET = 'YOUR_SECRET'
-
- # set the region (us, us2, ca, eu, oc)
- $Region               = 'us'
-
-```powershell
-Connect-NinjaOne -ClientId $Env:NINJA_CLIENT_ID -ClientSecret $Env:NINJA_CLIENT_SECRET \
-    -Instance $Region -Scopes management,monitoring -UseClientAuth
-```
-
-Connect-NinjaOne @connectSplat
-
-Get-NinjaOneOrganizations
-
-### Manual pick: organisation & location
-$orgs = Get-NinjaOneOrganizations | Sort-Object Name
-for ($i=0; $i -lt $orgs.Count; $i++) { "{0}) {1}" -f $i, $orgs[$i].Name }
-$idx = Read-Host "Select organisation (0-$($orgs.Count-1))"
-$org = $orgs[$idx]
-
-$locs = Get-NinjaOneLocations -organisationId $org.Id | Sort-Object Name
-for ($i=0; $i -lt $locs.Count; $i++) { "{0}) {1}" -f $i, $locs[$i].Name }
-$idx = Read-Host "Select location (0-$($locs.Count-1))"
-$loc = $locs[$idx]
+  pwsh -c - -Install -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
 
 ---
 
-## Changelog
+## Installing PowerShell on Linux (optional)
+If your distro doesn’t have PowerShell 7, install it with:
+```bash
+curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-pwsh.sh | sudo bash
+```
 
-See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.
+---
+
+## Parameters
+
+| Parameter         | Description                                                          | Default |
+| ----------------- | -------------------------------------------------------------------- | ------- |
+| `-Install`        | Install the agent after downloading                                  | `true`  |
+| `-Gui`            | Force-install GUI libraries on Linux                                 | auto    |
+| `-NoGui`          | Force-skip GUI libraries on Linux                                    | auto    |
+| `-Region`         | Tenant region/instance (`US`, `US2`, `CA`, `EU`, `OC`, `NA`)         | `US`    |
+| `-InstallerType`  | Installer type (`WINDOWS_MSI`,`LINUX_DEB`,`LINUX_RPM`,`MAC_PKG`)     | auto    |
+| `-ClientId`       | NinjaOne API client Id                                               |         |
+| `-ClientSecret`   | NinjaOne API client secret                                           |         |
+| `-Organization`   | Organization Id or Name (skips interactive pick)                     |         |
+| `-Location`       | Location Id or Name (skips interactive pick)                         |         |
+| `-NonInteractive` | Fail instead of prompting when selection is ambiguous                | `false` |
+| `-UseDeviceCode`  | Force device code auth; auto-used when no GUI is available           | `false` |
+
+---
+
+## Troubleshooting
+- PowerShell 5.x TLS: enable TLS 1.2 if downloads fail.
+  ```powershell
+  [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+  ```
+- PSGallery prompts: pre-trust and add NuGet provider.
+  ```powershell
+  Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+  Install-PackageProvider -Name NuGet -Scope CurrentUser -Force
+  ```
+- Linux GUI dependencies: if GUI deps fail, rerun with `-NoGui`.
+- Empty organisation list: verify API credentials and region/instance.
+- Insufficient privileges: client needs `management` and `monitoring` scopes.
+- Headless sessions: prefer `-UseDeviceCode` instead of web auth.
+
+---
+
+## Changelog
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Contributing
-
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and development setup.
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
 
 ## CLI Reference
-
-For detailed cmdlet syntax, parameters, and examples of the NinjaOne PowerShell module,
-see the [NinjaOne PowerShell Cmdlet Reference](NinjaOne-CmdletHelp.md).
+For detailed NinjaOne cmdlet help, see [NinjaOne-CmdletHelp.md](NinjaOne-CmdletHelp.md).

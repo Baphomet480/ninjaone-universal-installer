@@ -10,7 +10,7 @@ set -euo pipefail
 #   sudo bash install-ninja.sh -- -Install -ClientId 'xxx' -ClientSecret 'yyy'
 #   sudo bash install-ninja.sh -- -Region EU -Install
 #   curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/install-ninja.sh \
-#     | sudo bash -- -Install -ClientId 'xxx' -ClientSecret 'yyy'
+#     | sudo bash -s -- -Install -ClientId 'xxx' -ClientSecret 'yyy'
 ###############################################################################
 
 # ==========================================================================

@@ -5,26 +5,93 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1' # Weekly (Mon 06:00 UTC)
+  workflow_dispatch:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    name: Lint (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            module_path: ~/.local/share/powershell/Modules
+          - os: macos-latest
+            module_path: ~/.local/share/powershell/Modules
+          - os: windows-latest
+            module_path: ~\\Documents\\PowerShell\\Modules
     steps:
       - uses: actions/checkout@v3
       - name: Setup PowerShell
         uses: actions/setup-powershell@v3
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.module_path }}
+          key: ${{ runner.os }}-psmodules-v2-pssa-1.22.0
+          restore-keys: |
+            ${{ runner.os }}-psmodules-
+      - name: Trust PSGallery and bootstrap
+        run: pwsh -c "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue"
       - name: Install PSScriptAnalyzer
-        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force"
+        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.22.0 -Scope CurrentUser -Force -Repository PSGallery"
       - name: Run PSScriptAnalyzer
         run: pwsh -c "Invoke-ScriptAnalyzer -Path . -Recurse"
 
   test:
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            module_path: ~/.local/share/powershell/Modules
+          - os: macos-latest
+            module_path: ~/.local/share/powershell/Modules
+          - os: windows-latest
+            module_path: ~\\Documents\\PowerShell\\Modules
     steps:
       - uses: actions/checkout@v3
       - name: Setup PowerShell
         uses: actions/setup-powershell@v3
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.module_path }}
+          key: ${{ runner.os }}-psmodules-v2-pester-5.7.1
+          restore-keys: |
+            ${{ runner.os }}-psmodules-
+      - name: Trust PSGallery and bootstrap
+        run: pwsh -c "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue"
       - name: Install Pester
-        run: pwsh -c "Install-Module -Name Pester -Scope CurrentUser -Force"
+        run: pwsh -c "Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -Repository PSGallery"
       - name: Run Pester tests
+        run: pwsh -c "Invoke-Pester -Path tests"
+
+  latest:
+    name: Latest Modules (${{ matrix.os }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v3
+      - name: Trust PSGallery and bootstrap
+        run: pwsh -c "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue"
+      - name: Install latest PSScriptAnalyzer
+        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force -Repository PSGallery"
+      - name: Install latest Pester
+        run: pwsh -c "Install-Module -Name Pester -Scope CurrentUser -Force -Repository PSGallery"
+      - name: Lint with latest
+        run: pwsh -c "Invoke-ScriptAnalyzer -Path . -Recurse"
+      - name: Test with latest
         run: pwsh -c "Invoke-Pester -Path tests"

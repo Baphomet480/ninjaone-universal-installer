@@ -1,5 +1,5 @@
 # NinjaOne Universal Installer
-**Version: 0.2.1**
+**Version: 0.2.2**
 
 A single, self-contained PowerShell script that:
 

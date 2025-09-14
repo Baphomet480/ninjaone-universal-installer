@@ -3,7 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-- feat(windows): support no-save one-liner (`iwr|iex`) by self-materializing on elevation.
+- 
+
+## [0.2.2] - 2025-09-14
+- feat(windows): support no-save one-liner (`iwr|iex`) by self-materializing during elevation.
+- docs: update Windows section with no-save one-liner and temp-file variant.
 
 ## [0.2.1] - 2025-09-14
 - fix: robust auth across NinjaOne module versions (param probing, clearer errors).

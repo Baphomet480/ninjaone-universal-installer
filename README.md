@@ -29,19 +29,17 @@ curl -sSL "https://raw.githubusercontent.com/baphomet480/ninjaone-universal-inst
 ```
 
 ### Windows (PowerShell 5.x or 7+)
-Download the script (no-cache) and run:
+No‑save one‑liner (best default; prompts to sign in, pick org/location, then installs):
 ```powershell
-Remove-Item .\ninja-universal.ps1 -ErrorAction SilentlyContinue
-Invoke-WebRequest https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 `
-  -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' } -OutFile ninja-universal.ps1
-.
-ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+irm https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -Headers @{ 'Cache-Control'='no-cache' } | iex
 ```
 
-Windows one‑liner (download + run):
+Download to temp (optional; cleans up manually):
 ```powershell
-irm https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -Headers @{ 'Cache-Control'='no-cache' } | `
-  iex; ninja-universal -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+$tmp = Join-Path $env:TEMP ("ninja-universal-" + [guid]::NewGuid().ToString() + ".ps1"); `
+  iwr https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -Headers @{ 'Cache-Control'='no-cache' } -OutFile $tmp; `
+  & $tmp; `
+  Remove-Item $tmp -Force -ErrorAction SilentlyContinue
 ```
 
 ---
@@ -146,6 +144,19 @@ curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-insta
 - Insufficient privileges: client needs `management` and `monitoring` scopes.
 - Headless sessions: prefer `-UseDeviceCode` instead of web auth.
 - Interactive login asks for ClientId/ClientSecret: your installed NinjaOne module requires a registered API client for interactive auth. Provide `-ClientId`/`-ClientSecret` or set env vars and rerun.
+
+---
+
+## Planned Enhancements
+
+The following improvements are planned and tracked as GitHub issues. They are not available in v0.2.1.
+
+- Logging and exit codes (#4):
+  - `-LogPath <file>` to persist a structured log and, on Windows, capture MSI verbose logs.
+  - Standardized non‑zero exit codes for CI (auth, API, download, install, invalid args).
+
+- Release automation (#10):
+  - Auto‑publish a GitHub Release when a tag `vX.Y.Z` is pushed, and include JSON output usage examples for CI.
 
 ---
 

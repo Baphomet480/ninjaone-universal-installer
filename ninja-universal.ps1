@@ -76,6 +76,9 @@ param (
     [string]$Output = 'Text'
 )
 
+# Canonical raw URL for self-materialization (used when launched via iwr|iex)
+$Script:SelfUrl = 'https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1'
+
 # Default to install behavior if -Install not specified
 if (-not $PSBoundParameters.ContainsKey('Install')) {
     $Install = $true
@@ -158,8 +161,18 @@ function Start-AdminElevation {
             if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, 'Relaunch elevated')) {
                 Write-Information "[INFO] Relaunching elevated…" -InformationAction Continue
                 $relaunchArgs = $MyInvocation.UnboundArguments -join ' '
+                $runPath = $PSCommandPath
+                if ([string]::IsNullOrWhiteSpace($runPath)) {
+                    try {
+                        $runPath = Join-Path ([IO.Path]::GetTempPath()) ("ninja-universal-" + [guid]::NewGuid().ToString() + ".ps1")
+                        $hdr = @{ 'Cache-Control'='no-cache' }
+                        Invoke-WebRequest -Uri $Script:SelfUrl -UseBasicParsing -Headers $hdr -OutFile $runPath
+                    } catch {
+                        throw "Failed to fetch self script for elevation. Please rerun in an elevated PowerShell or download the script to disk."
+                    }
+                }
                 Start-Process -FilePath (Get-Process -Id $PID).Path -Verb RunAs \
-                    -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command & `\"$PSCommandPath`\" $relaunchArgs"
+                    -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command & `\"$runPath`\" $relaunchArgs"
                 exit
             }
         }

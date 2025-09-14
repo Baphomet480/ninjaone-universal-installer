@@ -1,6 +1,6 @@
 @{
     RootModule        = 'NinjaUniversal.psm1'
-    ModuleVersion     = '0.2.0'
+    ModuleVersion     = '0.2.1'
     GUID              = '3f2e6a0a-53a7-4c7a-8e22-474d24b5b4e2'
     Author            = 'NinjaOne Community'
     CompanyName       = 'NinjaOne'
@@ -21,4 +21,3 @@
     VariablesToExport = @()
     AliasesToExport   = @()
 }
-

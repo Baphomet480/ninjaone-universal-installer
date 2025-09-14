@@ -2,7 +2,7 @@
 .SYNOPSIS
     Download and optionally install the latest NinjaOne agent.
 .VERSION
-    0.2.0
+    0.2.1
 .
 .DESCRIPTION
     - Authenticates to the NinjaOne Public API v2.
@@ -12,7 +12,7 @@
     - Adds GUI/OpenGL libraries on Linux when needed.
 .
 .NOTES
-    Version: 0.2.0
+    Version: 0.2.1
 .PARAMETER Install
     Install the agent after downloading (default: enabled).
 .
@@ -71,7 +71,9 @@ param (
     [switch]$UseWebAuth,
     [string]$Organization,
     [string]$Location,
-    [switch]$NonInteractive
+    [switch]$NonInteractive,
+    [ValidateSet('Text','Json')]
+    [string]$Output = 'Text'
 )
 
 # Default to install behavior if -Install not specified
@@ -213,21 +215,60 @@ if (-not (Get-Command Get-NinjaAuth -ErrorAction SilentlyContinue)) {
             [switch]$UseWebAuth
         )
         $Region = if ($Region.ToUpper() -eq 'NA') { 'US' } else { $Region }
-        if (-not (Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue)) {
-            throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed."
+        $cnx = Get-Command Connect-NinjaOne -ErrorAction SilentlyContinue
+        if (-not $cnx) { throw "Connect-NinjaOne cmdlet not found. Ensure the NinjaOne module is installed." }
+
+        $paramSet = $cnx.Parameters
+        $has = { param([string]$p) return $paramSet.ContainsKey($p) }
+        $instanceParam = @('Instance','Region','Environment') | Where-Object { & $has $_ } | Select-Object -First 1
+        if (-not $instanceParam) { $instanceParam = 'Instance' }
+
+        function Invoke-Connect([hashtable]$connArgs, [string]$mode) {
+            try {
+                Connect-NinjaOne @connArgs | Out-Null
+                $instUsed = if ($connArgs.ContainsKey($instanceParam)) { $connArgs[$instanceParam] } else { $Region.ToLower() }
+                return @{ Mode=$mode; Region=$Region; Instance=$instUsed }
+            }
+            catch {
+                $msg = $_.Exception.Message
+                if ($msg -match 'ClientId.*ClientSecret') {
+                    throw "Interactive login requires a registered API client in this NinjaOne module version. Provide -ClientId and -ClientSecret or set NINJA_CLIENT_ID/NINJA_CLIENT_SECRET."
+                }
+                if ($msg -match 'RefreshToken' -or $msg -match 'UseTokenAuth') {
+                    throw "Refresh token auth is not supported by this NinjaOne module version. Use -ClientId/-ClientSecret or interactive/device code."
+                }
+                throw
+            }
         }
+
+        $base = @{}
+        $base[$instanceParam] = $Region.ToLower()
+        if (& $has 'Scopes') { $base.Scopes = @('management','monitoring') }
+
         if ($RefreshToken) {
-            $splat = @{ Instance = $Region.ToLower(); UseTokenAuth = $true; RefreshToken = $RefreshToken }
-            if ($ClientId)    { $splat.ClientId    = $ClientId }
-            if ($ClientSecret){ $splat.ClientSecret= $ClientSecret }
-            Connect-NinjaOne @splat | Out-Null
-            return @{ Mode='Token'; Region=$Region }
+            $tokenArgs = $base.Clone()
+            if (& $has 'UseTokenAuth') { $tokenArgs.UseTokenAuth = $true }
+            if (& $has 'RefreshToken') { $tokenArgs.RefreshToken = $RefreshToken } else { $tokenArgs.Remove('UseTokenAuth') | Out-Null }
+            if ($tokenArgs.ContainsKey('RefreshToken')) { return Invoke-Connect $tokenArgs 'Token' }
+            if ($NonInteractive) { throw "This module does not support refresh token auth in non-interactive mode." }
         }
+
         if ($ClientId -and $ClientSecret) {
-            Connect-NinjaOne -ClientId $ClientId -ClientSecret $ClientSecret -Instance $Region.ToLower() -Scopes management,monitoring -UseClientAuth | Out-Null
-            return @{ Mode='Client'; Region=$Region }
+            $cc = $base.Clone()
+            $cc.ClientId     = $ClientId
+            $cc.ClientSecret = $ClientSecret
+            if (& $has 'UseClientAuth') { $cc.UseClientAuth = $true }
+
+            $instances = @($Region.ToUpper().Replace('NA','US'), 'US','US2','EU','CA','OC') | Select-Object -Unique
+            $lastError = $null
+            foreach ($inst in $instances) {
+                $cc[$instanceParam] = $inst.ToLower()
+                try { return Invoke-Connect $cc 'Client' } catch { $lastError = $_ }
+            }
+            if ($lastError) { throw $lastError }
         }
-        if ($NonInteractive) { throw "Missing credentials in non-interactive mode." }
+
+        if ($NonInteractive) { throw "Missing credentials in non-interactive mode. Provide -ClientId/-ClientSecret or a supported -RefreshToken." }
 
         $uiAvailable = $false
         try {
@@ -235,36 +276,21 @@ if (-not (Get-Command Get-NinjaAuth -ErrorAction SilentlyContinue)) {
             elseif ($IsWindows -or $IsMacOS) { $uiAvailable = [Environment]::UserInteractive }
         } catch { $uiAvailable = $false }
 
-        # Explicit device-code request
-        if ($UseDeviceCode) {
-            $cmd = Get-Command Connect-NinjaOne
-            $paramName = @('UseDeviceCode','UseDeviceAuth','DeviceCode') | Where-Object { $cmd.Parameters.ContainsKey($_) } | Select-Object -First 1
-            if ($paramName) {
+        $deviceParam = @('UseDeviceCode','UseDeviceAuth','DeviceCode') | Where-Object { & $has $_ } | Select-Object -First 1
+        if ($UseDeviceCode -or -not $uiAvailable) {
+            if ($deviceParam) {
                 Write-Information "[INFO] Starting device code authentication…" -InformationAction Continue
-                $splat = @{ Instance = $Region.ToLower(); Scopes = 'management,monitoring' }
-                $splat[$paramName] = $true
-                Connect-NinjaOne @splat | Out-Null
-                return @{ Mode='DeviceCode'; Region=$Region }
+                $dc = $base.Clone(); $dc[$deviceParam] = $true
+                return Invoke-Connect $dc 'DeviceCode'
             }
-            throw "Device code auth not supported by current NinjaOne module. Use -UseWebAuth (with a browser) or -ClientId/-ClientSecret."
+            if (-not $uiAvailable) { throw "No browser UI available and device code auth is not supported by this module. Use -ClientId/-ClientSecret instead." }
         }
 
-        # Explicit web auth request
-        if ($UseWebAuth) {
-            if (-not $uiAvailable) { throw "Web authentication requires a local browser/UI; use -ClientId/-ClientSecret instead." }
-            Write-Information "[INFO] Launching interactive NinjaOne login…" -InformationAction Continue
-            Connect-NinjaOne -Instance $Region.ToLower() -Scopes management,monitoring -UseWebAuth | Out-Null
-            return @{ Mode='Interactive'; Region=$Region }
-        }
-
-        # Auto: prefer web auth if UI available; otherwise require client credentials
-        if ($uiAvailable) {
-            Write-Information "[INFO] Launching interactive NinjaOne login…" -InformationAction Continue
-            Connect-NinjaOne -Instance $Region.ToLower() -Scopes management,monitoring -UseWebAuth | Out-Null
-            return @{ Mode='Interactive'; Region=$Region }
-        }
-
-        throw "No browser UI available and device code not requested/supported. Provide -ClientId/-ClientSecret or run with -UseWebAuth on a machine with a browser."
+        $wa = $base.Clone()
+        if ($UseWebAuth -and (& $has 'UseWebAuth')) { $wa.UseWebAuth = $true }
+        elseif (& $has 'UseWebAuth') { $wa.UseWebAuth = $true }
+        Write-Information "[INFO] Launching interactive NinjaOne login…" -InformationAction Continue
+        return Invoke-Connect $wa 'Interactive'
     }
 
     function Select-NinjaOrganization {
@@ -374,7 +400,15 @@ if (-not (Get-Command Get-NinjaAuth -ErrorAction SilentlyContinue)) {
 $CID = if ($ClientId) { $ClientId } elseif ($Env:NINJA_CLIENT_ID) { $Env:NINJA_CLIENT_ID } else { '' }
 $CSC = if ($ClientSecret) { $ClientSecret } elseif ($Env:NINJA_CLIENT_SECRET) { $Env:NINJA_CLIENT_SECRET } else { '' }
 $RTK = if ($RefreshToken) { $RefreshToken } elseif ($Env:NINJA_REFRESH_TOKEN) { $Env:NINJA_REFRESH_TOKEN } else { '' }
-Get-NinjaAuth -Region $Region -ClientId $CID -ClientSecret $CSC -RefreshToken $RTK -NonInteractive:$NonInteractive -UseDeviceCode:$UseDeviceCode -UseWebAuth:$UseWebAuth | Out-Null
+# Build auth parameters dynamically to match the available Get-NinjaAuth signature
+$authParams = @{ Region = $Region; NonInteractive = $NonInteractive }
+if ($CID) { $authParams.ClientId = $CID }
+if ($CSC) { $authParams.ClientSecret = $CSC }
+try { $cmd = Get-Command Get-NinjaAuth -ErrorAction Stop } catch { throw "Get-NinjaAuth not found after module import." }
+if ($RTK -and $cmd.Parameters.ContainsKey('RefreshToken')) { $authParams.RefreshToken = $RTK }
+if ($UseDeviceCode -and $cmd.Parameters.ContainsKey('UseDeviceCode')) { $authParams.UseDeviceCode = $true }
+if ($UseWebAuth -and $cmd.Parameters.ContainsKey('UseWebAuth'))   { $authParams.UseWebAuth   = $true }
+$auth = Get-NinjaAuth @authParams
 
 # ── choose Org & Location via module ──────────────────────────────────
 $org = Select-NinjaOrganization -Organization $Organization -NonInteractive:$NonInteractive
@@ -428,4 +462,22 @@ if ($Install) {
     Write-Information "`n[OK] Agent installed and running." -InformationAction Continue
 }
 
-Write-Information "`n[DONE] Latest installer saved at $Out" -InformationAction Continue
+if ($Output -eq 'Json') {
+    $payload = [pscustomobject]@{
+        Version        = '0.2.1'
+        AuthMode       = $auth.Mode
+        Instance       = $(if ($auth.PSObject.Properties.Name -contains 'Instance') { $auth.Instance } else { $Region.ToLower() })
+        Region         = $auth.Region
+        Organization   = $org.Name
+        OrganizationId = $org.Id
+        Location       = $loc.Name
+        LocationId     = $loc.Id
+        InstallerType  = $InstallerType
+        DownloadPath   = $Out
+        Installed      = [bool]$Install
+        TimestampUtc   = [DateTime]::UtcNow.ToString('o')
+    }
+    $payload | ConvertTo-Json -Depth 4
+} else {
+    Write-Information "`n[DONE] Latest installer saved at $Out" -InformationAction Continue
+}

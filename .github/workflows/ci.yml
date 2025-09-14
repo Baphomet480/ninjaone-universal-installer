@@ -33,9 +33,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-psmodules-
       - name: Trust PSGallery and bootstrap
-        run: pwsh -c "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'SilentlyContinue'
+          if (Get-Command Set-PSResourceRepository -ErrorAction SilentlyContinue) {
+            try { Set-PSResourceRepository -Name PSGallery -Trusted -ErrorAction SilentlyContinue } catch {}
+          } elseif (Get-Command Set-PSRepository -ErrorAction SilentlyContinue) {
+            try { Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue } catch {}
+          }
+          if (Get-Command Install-PackageProvider -ErrorAction SilentlyContinue) {
+            try { Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue | Out-Null } catch {}
+          }
+          exit 0
       - name: Install PSScriptAnalyzer
-        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.22.0 -Scope CurrentUser -Force -Repository PSGallery"
+        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.22.0 -Scope CurrentUser -Force -Repository PSGallery -AcceptLicense"
       - name: Run PSScriptAnalyzer
         run: pwsh -c "Invoke-ScriptAnalyzer -Path . -Recurse"
 
@@ -62,9 +73,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-psmodules-
       - name: Trust PSGallery and bootstrap
-        run: pwsh -c "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'SilentlyContinue'
+          if (Get-Command Set-PSResourceRepository -ErrorAction SilentlyContinue) {
+            try { Set-PSResourceRepository -Name PSGallery -Trusted -ErrorAction SilentlyContinue } catch {}
+          } elseif (Get-Command Set-PSRepository -ErrorAction SilentlyContinue) {
+            try { Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue } catch {}
+          }
+          if (Get-Command Install-PackageProvider -ErrorAction SilentlyContinue) {
+            try { Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue | Out-Null } catch {}
+          }
+          exit 0
       - name: Install Pester
-        run: pwsh -c "Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -Repository PSGallery"
+        run: pwsh -c "Install-Module -Name Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -Repository PSGallery -AcceptLicense"
       - name: Run Pester tests
         run: pwsh -c "Invoke-Pester -Path tests"
 
@@ -80,11 +102,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Trust PSGallery and bootstrap
-        run: pwsh -c "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'SilentlyContinue'
+          if (Get-Command Set-PSResourceRepository -ErrorAction SilentlyContinue) {
+            try { Set-PSResourceRepository -Name PSGallery -Trusted -ErrorAction SilentlyContinue } catch {}
+          } elseif (Get-Command Set-PSRepository -ErrorAction SilentlyContinue) {
+            try { Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction SilentlyContinue } catch {}
+          }
+          if (Get-Command Install-PackageProvider -ErrorAction SilentlyContinue) {
+            try { Install-PackageProvider -Name NuGet -Scope CurrentUser -Force -ErrorAction SilentlyContinue | Out-Null } catch {}
+          }
+          exit 0
       - name: Install latest PSScriptAnalyzer
-        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force -Repository PSGallery"
+        run: pwsh -c "Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force -Repository PSGallery -AcceptLicense"
       - name: Install latest Pester
-        run: pwsh -c "Install-Module -Name Pester -Scope CurrentUser -Force -Repository PSGallery"
+        run: pwsh -c "Install-Module -Name Pester -Scope CurrentUser -Force -Repository PSGallery -AcceptLicense"
       - name: Lint with latest
         run: pwsh -c "Invoke-ScriptAnalyzer -Path . -Recurse"
       - name: Test with latest

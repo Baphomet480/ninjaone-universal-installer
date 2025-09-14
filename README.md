@@ -1,5 +1,5 @@
 # NinjaOne Universal Installer
-**Version: 0.2.0**
+**Version: 0.2.1**
 
 A single, self-contained PowerShell script that:
 
@@ -38,6 +38,12 @@ Invoke-WebRequest https://raw.githubusercontent.com/baphomet480/ninjaone-univers
 ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
 ```
 
+Windows one‑liner (download + run):
+```powershell
+irm https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 -UseBasicParsing -Headers @{ 'Cache-Control'='no-cache' } | `
+  iex; ninja-universal -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECRET>'
+```
+
 ---
 
 ## Requirements
@@ -67,6 +73,7 @@ ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECR
 ./ninja-universal.ps1 -Install -Organization 'Acme Co' -Location 'HQ' -NonInteractive `
   -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
+Tip: When using client credentials you can usually omit `-Region`. The installer will try common instances (US, US2, EU, CA, OC) until it succeeds.
 
 ### Headless or SSH (device code auth)
 ```powershell
@@ -75,6 +82,7 @@ ninja-universal.ps1 -Install -ClientId '<CLIENT_ID>' -ClientSecret '<CLIENT_SECR
 Notes:
 - Prints a verification URL and code to enter on another device.
 - If the installed NinjaOne module lacks device-code support, use client credentials instead.
+- Some NinjaOne module versions require a registered API client even for interactive/web auth. If you are prompted for ClientId/ClientSecret during login, set `NINJA_CLIENT_ID` and `NINJA_CLIENT_SECRET` (or pass `-ClientId`/`-ClientSecret`).
 
 ### Direct pipe to PowerShell (optional)
 Linux/macOS:
@@ -83,6 +91,16 @@ curl -H 'Cache-Control: no-cache' -sSL \
   https://raw.githubusercontent.com/baphomet480/ninjaone-universal-installer/main/ninja-universal.ps1 | \
   pwsh -c - -Install -ClientId 'YOUR_ID' -ClientSecret 'YOUR_SECRET'
 ```
+
+JSON output (for CI):
+```bash
+pwsh -File ./ninja-universal.ps1 -Install -ClientId "$NINJA_CLIENT_ID" -ClientSecret "$NINJA_CLIENT_SECRET" -Output Json \
+  | jq .
+```
+
+Environment variables supported:
+- `NINJA_CLIENT_ID`, `NINJA_CLIENT_SECRET`, optional `NINJA_REFRESH_TOKEN`.
+- If set, you can skip the corresponding parameters.
 
 ---
 
@@ -108,6 +126,7 @@ curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-insta
 | `-Organization`   | Organization Id or Name (skips interactive pick)                     |         |
 | `-Location`       | Location Id or Name (skips interactive pick)                         |         |
 | `-NonInteractive` | Fail instead of prompting when selection is ambiguous                | `false` |
+| `-Output`         | Output format (`Text`, `Json`)                                       | `Text`  |
 | `-UseDeviceCode`  | Force device code auth; auto-used when no GUI is available           | `false` |
 
 ---
@@ -126,6 +145,7 @@ curl -sSL https://raw.githubusercontent.com/baphomet480/ninjaone-universal-insta
 - Empty organisation list: verify API credentials and region/instance.
 - Insufficient privileges: client needs `management` and `monitoring` scopes.
 - Headless sessions: prefer `-UseDeviceCode` instead of web auth.
+- Interactive login asks for ClientId/ClientSecret: your installed NinjaOne module requires a registered API client for interactive auth. Provide `-ClientId`/`-ClientSecret` or set env vars and rerun.
 
 ---
 

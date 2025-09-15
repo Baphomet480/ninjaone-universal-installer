@@ -55,3 +55,6 @@ When shipping a user-facing change (flags, behavior, messages):
 ## Notes for Contributors
 - Target Windows PowerShell 5.x compatibility where noted and PowerShell 7+ as primary dev environment.
 - Keep changes focused; avoid distro-specific assumptions if a generic path exists.
+
+- Maintainer prefers the agent manages git operations (commits, pushes, branches, merges) proactively—including pushing to `origin/main`—without additional prompts unless explicitly told otherwise.
+- Agent should check available MCP tools (e.g., web search, Context7) whenever they would help with research or testing.
